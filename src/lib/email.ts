@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import type { Applicant, Interview } from '@prisma/client';
 import { getStoreConfig } from './config';
+import { getOwnerNotificationEmail } from './notification-email';
 
 interface SmtpConfig {
   host: string;
@@ -68,8 +69,8 @@ export async function sendEmail(to: string, subject: string, html: string, text:
 
 export async function sendNewApplicationEmail(applicant: Applicant) {
   const config = await getStoreConfig();
-  const ownerEmail = process.env.OWNER_EMAIL;
-  if (!ownerEmail) return { sent: false, reason: 'OWNER_EMAIL not configured' };
+  const ownerEmail = await getOwnerNotificationEmail();
+  if (!ownerEmail) return { sent: false, reason: 'Notification email not configured' };
 
   const fullName = `${applicant.firstName} ${applicant.lastName}`;
   const subject = 'New Job Application Received';

@@ -1,16 +1,29 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Save } from 'lucide-react';
+import { Save, Building2, Palette, Mail, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
+import AccountSecuritySection from '@/components/admin/settings/AccountSecuritySection';
+
+type SettingsTab = 'company' | 'branding' | 'email' | 'account';
+
+const TABS: { id: SettingsTab; label: string; icon: typeof Building2 }[] = [
+  { id: 'company', label: 'Company', icon: Building2 },
+  { id: 'branding', label: 'Branding', icon: Palette },
+  { id: 'email', label: 'Email Notifications', icon: Mail },
+  { id: 'account', label: 'Account & Security', icon: ShieldCheck },
+];
 
 export default function SettingsPage() {
+  const [activeTab, setActiveTab] = useState<SettingsTab>('company');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     name: '', address: '', phone: '', email: '', description: '',
     logoUrl: '', primaryColor: '#351C15', accentColor: '#FFB500',
-    settings: { ownerEmail: '', smtpHost: '', smtpPort: '587', smtpUser: '', smtpPass: '', uploadProvider: 'uploadthing' },
+    settings: {
+      smtpHost: '', smtpPort: '587', smtpUser: '', smtpPass: '', uploadProvider: 'uploadthing',
+    },
   });
 
   useEffect(() => {
@@ -28,7 +41,6 @@ export default function SettingsPage() {
             primaryColor: d.company.primaryColor || '#351C15',
             accentColor: d.company.accentColor || '#FFB500',
             settings: {
-              ownerEmail: d.company.settings?.ownerEmail || '',
               smtpHost: d.company.settings?.smtpHost || '',
               smtpPort: String(d.company.settings?.smtpPort || '587'),
               smtpUser: d.company.settings?.smtpUser || '',
@@ -62,70 +74,204 @@ export default function SettingsPage() {
   if (loading) return <div className="saas-loading">Loading settings...</div>;
 
   return (
-    <div className="saas-page">
+    <div className="saas-page settings-page">
       <div className="saas-page-header">
         <div>
           <h1>Settings</h1>
-          <p className="saas-subtitle">Configure your hiring portal</p>
+          <p className="saas-subtitle">Configure your hiring portal and owner account</p>
         </div>
       </div>
 
-      <form onSubmit={handleSave} className="saas-settings-form">
-        <div className="saas-card">
-          <h3>Company Information</h3>
-          <div className="saas-form-row">
-            <div className="saas-form-group"><label>Store Name</label><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-            <div className="saas-form-group"><label>Logo URL</label><input value={form.logoUrl} onChange={(e) => setForm({ ...form, logoUrl: e.target.value })} placeholder="https://..." /></div>
-          </div>
-          <div className="saas-form-group"><label>Address</label><input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
-          <div className="saas-form-row">
-            <div className="saas-form-group"><label>Phone</label><input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
-            <div className="saas-form-group"><label>Email</label><input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
-          </div>
-          <div className="saas-form-group"><label>Company Description</label><textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
-        </div>
+      <div className="settings-tabs">
+        {TABS.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            type="button"
+            className={`settings-tab ${activeTab === id ? 'active' : ''}`}
+            onClick={() => setActiveTab(id)}
+          >
+            <Icon size={18} />
+            <span>{label}</span>
+          </button>
+        ))}
+      </div>
 
-        <div className="saas-card">
-          <h3>Branding</h3>
-          <div className="saas-form-row">
-            <div className="saas-form-group">
-              <label>Primary Color</label>
-              <input type="color" value={form.primaryColor} onChange={(e) => setForm({ ...form, primaryColor: e.target.value })} />
+      {activeTab === 'account' ? (
+        <AccountSecuritySection />
+      ) : (
+        <form onSubmit={handleSave} className="saas-settings-form">
+          {activeTab === 'company' && (
+            <div className="saas-card settings-card">
+              <div className="settings-card-header">
+                <Building2 size={20} />
+                <div>
+                  <h3>Company Information</h3>
+                  <p>Public details shown on your hiring portal</p>
+                </div>
+              </div>
+              <div className="saas-form-group">
+                <label>Store Name</label>
+                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              </div>
+              <div className="saas-form-group">
+                <label>Address</label>
+                <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+              </div>
+              <div className="saas-form-row">
+                <div className="saas-form-group">
+                  <label>Phone</label>
+                  <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                </div>
+                <div className="saas-form-group">
+                  <label>Company Email</label>
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    placeholder="contact@yourstore.com"
+                  />
+                  <span className="field-hint">Public contact email (not your login email)</span>
+                </div>
+              </div>
+              <div className="saas-form-group">
+                <label>Company Description</label>
+                <textarea
+                  rows={3}
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                />
+              </div>
             </div>
-            <div className="saas-form-group">
-              <label>Accent Color</label>
-              <input type="color" value={form.accentColor} onChange={(e) => setForm({ ...form, accentColor: e.target.value })} />
+          )}
+
+          {activeTab === 'branding' && (
+            <div className="saas-card settings-card">
+              <div className="settings-card-header">
+                <Palette size={20} />
+                <div>
+                  <h3>Branding</h3>
+                  <p>Customize colors and logo for your portal</p>
+                </div>
+              </div>
+              <div className="saas-form-group">
+                <label>Logo URL</label>
+                <input
+                  value={form.logoUrl}
+                  onChange={(e) => setForm({ ...form, logoUrl: e.target.value })}
+                  placeholder="https://..."
+                />
+              </div>
+              <div className="saas-form-row">
+                <div className="saas-form-group">
+                  <label>Primary Color</label>
+                  <div className="color-input-wrap">
+                    <input
+                      type="color"
+                      value={form.primaryColor}
+                      onChange={(e) => setForm({ ...form, primaryColor: e.target.value })}
+                    />
+                    <span>{form.primaryColor}</span>
+                  </div>
+                </div>
+                <div className="saas-form-group">
+                  <label>Accent Color</label>
+                  <div className="color-input-wrap">
+                    <input
+                      type="color"
+                      value={form.accentColor}
+                      onChange={(e) => setForm({ ...form, accentColor: e.target.value })}
+                    />
+                    <span>{form.accentColor}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="branding-preview">
+                <div className="branding-preview-bar" style={{ background: form.primaryColor, color: form.accentColor }}>
+                  {form.name || 'Your Store'}
+                </div>
+                <button type="button" className="saas-btn saas-btn-sm" style={{ background: form.accentColor, color: form.primaryColor }}>
+                  Apply Now
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
+          )}
 
-        <div className="saas-card">
-          <h3>Email (SMTP)</h3>
-          <div className="saas-form-row">
-            <div className="saas-form-group"><label>Owner Email</label><input value={form.settings.ownerEmail} onChange={(e) => setForm({ ...form, settings: { ...form.settings, ownerEmail: e.target.value } })} /></div>
-            <div className="saas-form-group"><label>SMTP Host</label><input value={form.settings.smtpHost} onChange={(e) => setForm({ ...form, settings: { ...form.settings, smtpHost: e.target.value } })} /></div>
-          </div>
-          <div className="saas-form-row">
-            <div className="saas-form-group"><label>SMTP Port</label><input value={form.settings.smtpPort} onChange={(e) => setForm({ ...form, settings: { ...form.settings, smtpPort: e.target.value } })} /></div>
-            <div className="saas-form-group"><label>SMTP User</label><input value={form.settings.smtpUser} onChange={(e) => setForm({ ...form, settings: { ...form.settings, smtpUser: e.target.value } })} /></div>
-            <div className="saas-form-group"><label>SMTP Password</label><input type="password" value={form.settings.smtpPass} onChange={(e) => setForm({ ...form, settings: { ...form.settings, smtpPass: e.target.value } })} /></div>
-          </div>
-        </div>
+          {activeTab === 'email' && (
+            <>
+              <div className="saas-card settings-card">
+                <div className="settings-card-header">
+                  <Mail size={20} />
+                  <div>
+                    <h3>SMTP Configuration</h3>
+                    <p>Outgoing email server for applicant and system notifications</p>
+                  </div>
+                </div>
+                <div className="settings-info-banner">
+                  <ShieldCheck size={16} />
+                  <span>
+                    Set your <strong>notification email</strong> in the{' '}
+                    <button type="button" className="settings-inline-link" onClick={() => setActiveTab('account')}>
+                      Account & Security
+                    </button>{' '}
+                    tab to receive new applicant and interview alerts.
+                  </span>
+                </div>
+                <div className="saas-form-row">
+                  <div className="saas-form-group">
+                    <label>SMTP Host</label>
+                    <input
+                      value={form.settings.smtpHost}
+                      onChange={(e) => setForm({ ...form, settings: { ...form.settings, smtpHost: e.target.value } })}
+                      placeholder="smtp.gmail.com"
+                    />
+                  </div>
+                  <div className="saas-form-group">
+                    <label>SMTP Port</label>
+                    <input
+                      value={form.settings.smtpPort}
+                      onChange={(e) => setForm({ ...form, settings: { ...form.settings, smtpPort: e.target.value } })}
+                    />
+                  </div>
+                </div>
+                <div className="saas-form-row">
+                  <div className="saas-form-group">
+                    <label>SMTP User</label>
+                    <input
+                      value={form.settings.smtpUser}
+                      onChange={(e) => setForm({ ...form, settings: { ...form.settings, smtpUser: e.target.value } })}
+                    />
+                  </div>
+                  <div className="saas-form-group">
+                    <label>SMTP Password</label>
+                    <input
+                      type="password"
+                      value={form.settings.smtpPass}
+                      onChange={(e) => setForm({ ...form, settings: { ...form.settings, smtpPass: e.target.value } })}
+                      autoComplete="new-password"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="saas-card settings-card">
+                <h3>File Storage</h3>
+                <div className="saas-form-group">
+                  <label>Upload Provider</label>
+                  <select
+                    value={form.settings.uploadProvider}
+                    onChange={(e) => setForm({ ...form, settings: { ...form.settings, uploadProvider: e.target.value } })}
+                  >
+                    <option value="uploadthing">UploadThing</option>
+                  </select>
+                </div>
+              </div>
+            </>
+          )}
 
-        <div className="saas-card">
-          <h3>File Storage</h3>
-          <div className="saas-form-group">
-            <label>Upload Provider</label>
-            <select value={form.settings.uploadProvider} onChange={(e) => setForm({ ...form, settings: { ...form.settings, uploadProvider: e.target.value } })}>
-              <option value="uploadthing">UploadThing</option>
-            </select>
-          </div>
-        </div>
-
-        <button type="submit" className="saas-btn saas-btn-primary" disabled={saving}>
-          <Save size={16} /> {saving ? 'Saving...' : 'Save Settings'}
-        </button>
-      </form>
+          <button type="submit" className="saas-btn saas-btn-primary" disabled={saving}>
+            <Save size={16} /> {saving ? 'Saving...' : 'Save Settings'}
+          </button>
+        </form>
+      )}
     </div>
   );
 }

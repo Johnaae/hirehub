@@ -32,30 +32,30 @@ export async function ensureDefaultCompany() {
 }
 
 export async function ensureDefaultAdmin() {
+  const adminCount = await prisma.admin.count();
+  if (adminCount > 0) {
+    return;
+  }
+
   const adminEmail = process.env.ADMIN_EMAIL;
   const adminPassword = process.env.ADMIN_PASSWORD;
 
   if (!adminEmail || !adminPassword) {
-    console.warn('ADMIN_EMAIL or ADMIN_PASSWORD not set.');
+    console.warn('No admin exists and ADMIN_EMAIL or ADMIN_PASSWORD not set — skipping admin seed.');
     return;
   }
 
-  const existing = await prisma.admin.findUnique({
-    where: { email: adminEmail.toLowerCase() },
+  const passwordHash = await bcrypt.hash(adminPassword, 12);
+  await prisma.admin.create({
+    data: {
+      email: adminEmail.toLowerCase(),
+      passwordHash,
+      companyId: 1,
+      name: 'Store Owner',
+      notificationEmail: process.env.OWNER_EMAIL?.toLowerCase() || adminEmail.toLowerCase(),
+    },
   });
-
-  if (!existing) {
-    const passwordHash = await bcrypt.hash(adminPassword, 12);
-    await prisma.admin.create({
-      data: {
-        email: adminEmail.toLowerCase(),
-        passwordHash,
-        companyId: 1,
-        name: 'Store Owner',
-      },
-    });
-    console.log(`Default admin created: ${adminEmail}`);
-  }
+  console.log(`Default admin created: ${adminEmail}`);
 }
 
 export { slugify };

@@ -32,6 +32,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
+    await prisma.admin.update({
+      where: { id: admin.id },
+      data: { lastLoginAt: new Date() },
+    });
+
     const token = await signAdminToken({ id: admin.id, email: admin.email });
     const cookieStore = await cookies();
     cookieStore.set(COOKIE_NAME, token, getAuthCookieOptions());

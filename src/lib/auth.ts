@@ -25,4 +25,15 @@ export async function getSession(): Promise<AdminSession | null> {
   return verifyAdminToken(token);
 }
 
+export async function clearSession() {
+  const cookieStore = await cookies();
+  cookieStore.delete(COOKIE_NAME);
+}
+
+export async function setSession(admin: AdminSession) {
+  const token = await signAdminToken(admin);
+  const cookieStore = await cookies();
+  cookieStore.set(COOKIE_NAME, token, getAuthCookieOptions());
+}
+
 export { signAdminToken, verifyAdminToken, getAuthCookieOptions, COOKIE_NAME };

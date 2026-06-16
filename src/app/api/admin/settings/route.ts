@@ -37,25 +37,22 @@ export async function PATCH(request: Request) {
   });
 
   if (body.settings) {
+    const settingsData = {
+      smtpHost: body.settings.smtpHost,
+      smtpPort: body.settings.smtpPort ? parseInt(body.settings.smtpPort, 10) : null,
+      smtpUser: body.settings.smtpUser,
+      smtpPass: body.settings.smtpPass,
+      uploadProvider: body.settings.uploadProvider || 'uploadthing',
+      ...(body.settings.ownerEmail !== undefined && { ownerEmail: body.settings.ownerEmail }),
+    };
+
     await prisma.companySettings.upsert({
       where: { companyId: DEFAULT_COMPANY_ID },
       create: {
         companyId: DEFAULT_COMPANY_ID,
-        ownerEmail: body.settings.ownerEmail,
-        smtpHost: body.settings.smtpHost,
-        smtpPort: body.settings.smtpPort ? parseInt(body.settings.smtpPort, 10) : null,
-        smtpUser: body.settings.smtpUser,
-        smtpPass: body.settings.smtpPass,
-        uploadProvider: body.settings.uploadProvider || 'uploadthing',
+        ...settingsData,
       },
-      update: {
-        ownerEmail: body.settings.ownerEmail,
-        smtpHost: body.settings.smtpHost,
-        smtpPort: body.settings.smtpPort ? parseInt(body.settings.smtpPort, 10) : null,
-        smtpUser: body.settings.smtpUser,
-        smtpPass: body.settings.smtpPass,
-        uploadProvider: body.settings.uploadProvider,
-      },
+      update: settingsData,
     });
   }
 
