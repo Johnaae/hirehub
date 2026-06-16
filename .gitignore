@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+.next/
+out/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build
+dist/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Prisma
+prisma/*.db
+
+# Legacy (removed Express/Vite app)
+client/
+server/
+
+# Vercel
+.vercel

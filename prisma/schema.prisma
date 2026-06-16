@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("admins")
+}
+
+model Applicant {
+  id                         Int      @id @default(autoincrement())
+  firstName                  String   @map("first_name")
+  lastName                   String   @map("last_name")
+  email                      String
+  phone                      String
+  address                    String
+  city                       String
+  state                      String
+  zip                        String
+  position                   String
+  employmentType             String   @map("employment_type")
+  authorizedToWork           Boolean  @map("authorized_to_work")
+  over18                     Boolean  @map("over_18")
+  customerServiceExperience  Boolean  @map("customer_service_experience")
+  upsPrintShippingExperience Boolean  @map("ups_print_shipping_experience")
+  availableStartDate         DateTime @map("available_start_date") @db.Date
+  availabilityJson           Json     @map("availability_json")
+  previousEmployer             String?  @map("previous_employer")
+  previousJobTitle             String?  @map("previous_job_title")
+  previousStartDate            DateTime? @map("previous_start_date") @db.Date
+  previousEndDate              DateTime? @map("previous_end_date") @db.Date
+  reasonForLeaving             String?  @map("reason_for_leaving")
+  whyWorkHere                  String   @map("why_work_here")
+  resumeFilename               String?  @map("resume_filename")
+  resumeUrl                    String?  @map("resume_url")
+  resumeKey                    String?  @map("resume_key")
+  status                       String   @default("New")
+  notes                        String   @default("")
+  createdAt                    DateTime @default(now()) @map("created_at")
+  updatedAt                    DateTime @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([position])
+  @@index([createdAt(sort: Desc)])
+  @@index([email])
+  @@map("applicants")
+}
