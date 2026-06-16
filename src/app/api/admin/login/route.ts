@@ -9,7 +9,12 @@ import {
 } from '@/lib/auth';
 import { loginSchema } from '@/lib/validation';
 
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
+
 export async function POST(request: NextRequest) {
+  const rl = rateLimit(`login:${getClientIp(request)}`, 10, 900_000);
+  if (!rl.ok) return rl.response;
+
   try {
     const body = await request.json();
     const parsed = loginSchema.safeParse(body);

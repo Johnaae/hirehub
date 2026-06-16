@@ -1,10 +1,11 @@
-import bcrypt from 'bcryptjs';
 import prisma from '../src/lib/prisma';
-import { ensureDefaultAdmin } from '../src/lib/admin';
+import { ensureDefaultAdmin, ensureDefaultCompany, ensureDefaultJobs } from '../src/lib/admin';
 
 async function main() {
   console.log('Seeding database...');
+  await ensureDefaultCompany();
   await ensureDefaultAdmin();
+  await ensureDefaultJobs();
   console.log('Seed complete.');
 }
 

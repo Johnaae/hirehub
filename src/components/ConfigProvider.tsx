@@ -9,6 +9,8 @@ const defaultConfig: StoreConfig = {
   ownerEmail: '',
   primaryColor: '#351C15',
   accentColor: '#FFB500',
+  description: '',
+  logoUrl: '',
 };
 
 const ConfigContext = createContext<{ config: StoreConfig; loading: boolean }>({

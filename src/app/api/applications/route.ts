@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { applicationSchema, parseDateForDb } from '@/lib/validation';
-import { sendNewApplicationEmail } from '@/lib/email';
+import { sendNewApplicationEmail, sendApplicationReceivedEmail } from '@/lib/email';
+import { logActivity } from '@/lib/activity';
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
+import { DEFAULT_COMPANY_ID } from '@/lib/company';
 
 export async function POST(request: NextRequest) {
+  const rl = rateLimit(`apply:${getClientIp(request)}`, 10, 3600_000);
+  if (!rl.ok) return rl.response;
+
   try {
     const body = await request.json();
+    const jobId = body.jobId ? parseInt(body.jobId, 10) : null;
+
     const parsed = applicationSchema.safeParse(body);
 
     if (!parsed.success) {
@@ -55,6 +63,8 @@ export async function POST(request: NextRequest) {
 
     const applicant = await prisma.applicant.create({
       data: {
+        companyId: DEFAULT_COMPANY_ID,
+        jobId: jobId && !isNaN(jobId) ? jobId : null,
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
@@ -84,6 +94,12 @@ export async function POST(request: NextRequest) {
     });
 
     sendNewApplicationEmail(applicant).catch(console.error);
+    sendApplicationReceivedEmail(applicant).catch(console.error);
+    logActivity({
+      action: 'New Application',
+      details: `${applicant.firstName} ${applicant.lastName} applied for ${applicant.position}`,
+      applicantId: applicant.id,
+    }).catch(console.error);
 
     return NextResponse.json(
       { message: 'Application submitted successfully', id: applicant.id },

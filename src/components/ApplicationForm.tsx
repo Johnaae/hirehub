@@ -43,7 +43,8 @@ interface ValidationDetail {
 function buildPayload(
   form: typeof initialForm,
   availability: Record<string, string>,
-  resumeInfo: { filename: string; url: string; key: string } | null
+  resumeInfo: { filename: string; url: string; key: string } | null,
+  jobId?: number
 ) {
   return {
     firstName: form.firstName.trim(),
@@ -72,6 +73,7 @@ function buildPayload(
     resumeFilename: resumeInfo?.filename || null,
     resumeUrl: resumeInfo?.url || null,
     resumeKey: resumeInfo?.key || null,
+    ...(jobId ? { jobId } : {}),
   };
 }
 
@@ -113,9 +115,21 @@ function formatFieldLabel(field: string): string {
   return labels[field] || field;
 }
 
-export default function ApplicationForm() {
+export default function ApplicationForm({
+  jobId,
+  defaultPosition = '',
+  defaultEmploymentType = '',
+}: {
+  jobId?: number;
+  defaultPosition?: string;
+  defaultEmploymentType?: string;
+}) {
   const router = useRouter();
-  const [form, setForm] = useState(initialForm);
+  const [form, setForm] = useState({
+    ...initialForm,
+    position: defaultPosition,
+    employmentType: defaultEmploymentType,
+  });
   const [availability, setAvailability] = useState(initialAvailability);
   const [resumeInfo, setResumeInfo] = useState<{
     filename: string;
@@ -213,7 +227,7 @@ export default function ApplicationForm() {
 
     setSubmitting(true);
 
-    const payload = buildPayload(form, availability, resumeInfo);
+    const payload = buildPayload(form, availability, resumeInfo, jobId);
     console.log('Submitting application payload:', payload);
 
     try {

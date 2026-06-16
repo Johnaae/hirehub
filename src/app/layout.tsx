@@ -4,19 +4,20 @@ import { ConfigProvider } from '@/components/ConfigProvider';
 import { getStoreConfig } from '@/lib/config';
 import '@uploadthing/react/styles.css';
 import './globals.css';
+import './saas.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const config = getStoreConfig();
+  const config = await getStoreConfig();
   return {
     title: config.storeName,
     description: 'Apply online to join our team at The UPS Store.',
   };
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const config = getStoreConfig();
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const config = await getStoreConfig();
 
   return (
     <html lang="en">
