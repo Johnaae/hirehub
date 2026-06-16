@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { slugify, DEFAULT_COMPANY_ID } from '@/lib/company';
+import { JOB_STATUSES } from '@/lib/jobs';
 import { z } from 'zod';
 
 const jobSchema = z.object({
@@ -13,20 +14,52 @@ const jobSchema = z.object({
   requirements: z.string().optional().nullable(),
   benefits: z.string().optional().nullable(),
   location: z.string().optional().nullable(),
-  status: z.enum(['Open', 'Closed']).optional(),
+  status: z.enum(['Open', 'Closed', 'Draft', 'Archived']).optional(),
 });
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
 
-  const jobs = await prisma.job.findMany({
-    where: { companyId: DEFAULT_COMPANY_ID },
-    orderBy: { createdAt: 'desc' },
-    include: { _count: { select: { applicants: true } } },
-  });
+  const { searchParams } = request.nextUrl;
+  const search = searchParams.get('search')?.trim();
+  const status = searchParams.get('status');
+  const department = searchParams.get('department');
 
-  return NextResponse.json({ jobs });
+  const where: Record<string, unknown> = { companyId: DEFAULT_COMPANY_ID };
+
+  if (search) {
+    where.OR = [
+      { title: { contains: search, mode: 'insensitive' } },
+      { department: { contains: search, mode: 'insensitive' } },
+      { location: { contains: search, mode: 'insensitive' } },
+    ];
+  }
+  if (status && JOB_STATUSES.includes(status as (typeof JOB_STATUSES)[number])) {
+    where.status = status;
+  }
+  if (department) where.department = department;
+
+  const [jobs, statusCounts] = await Promise.all([
+    prisma.job.findMany({
+      where,
+      orderBy: { updatedAt: 'desc' },
+      include: { _count: { select: { applicants: true } } },
+    }),
+    prisma.job.groupBy({
+      by: ['status'],
+      where: { companyId: DEFAULT_COMPANY_ID },
+      _count: { status: true },
+    }),
+  ]);
+
+  const stats: Record<string, number> = { Open: 0, Closed: 0, Draft: 0, Archived: 0, Total: 0 };
+  for (const s of statusCounts) {
+    stats[s.status] = s._count.status;
+    stats.Total += s._count.status;
+  }
+
+  return NextResponse.json({ jobs, stats });
 }
 
 export async function POST(request: NextRequest) {
@@ -56,7 +89,7 @@ export async function POST(request: NextRequest) {
       requirements: data.requirements,
       benefits: data.benefits,
       location: data.location,
-      status: data.status || 'Open',
+      status: data.status || 'Draft',
     },
   });
 

@@ -1,159 +1,242 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { Plus, Pencil, Trash2, Users, MapPin, Briefcase } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { Plus, Briefcase, Search, Filter, LayoutTemplate } from 'lucide-react';
 import { toast } from 'sonner';
+import JobCard, { type JobCardData } from '@/components/admin/JobCard';
+import JobFormPanel, { type JobLookups, type JobTemplate, type JobFormValues } from '@/components/admin/JobFormPanel';
+import { linesToArray } from '@/lib/jobs';
+import { JOB_STATUSES } from '@/lib/jobs';
 
-interface Job {
-  id: number;
-  title: string;
-  slug: string;
-  department: string | null;
-  employmentType: string;
-  location: string | null;
-  salary: string | null;
-  status: string;
-  _count: { applicants: number };
+interface JobStats {
+  Open: number;
+  Closed: number;
+  Draft: number;
+  Archived: number;
+  Total: number;
 }
 
+const EMPTY_LOOKUPS: JobLookups = {
+  department: [],
+  job_title: [],
+  employment_type: [],
+  salary_range: [],
+  location: [],
+  requirement: [],
+  benefit: [],
+};
+
 export default function JobsPage() {
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const [jobs, setJobs] = useState<JobCardData[]>([]);
+  const [stats, setStats] = useState<JobStats>({ Open: 0, Closed: 0, Draft: 0, Archived: 0, Total: 0 });
+  const [lookups, setLookups] = useState<JobLookups>(EMPTY_LOOKUPS);
+  const [templates, setTemplates] = useState<JobTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [editing, setEditing] = useState<Job | null>(null);
-  const [form, setForm] = useState({
-    title: '', department: '', employmentType: 'Full-Time',
-    salary: '', location: '', description: '', requirements: '', benefits: '', status: 'Open',
-  });
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [formInitial, setFormInitial] = useState<Partial<JobFormValues>>({});
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [deptFilter, setDeptFilter] = useState('');
 
-  const load = () => {
-    fetch('/api/admin/jobs').then((r) => r.json()).then((d) => setJobs(d.jobs || [])).finally(() => setLoading(false));
-  };
+  const loadJobs = useCallback(() => {
+    const params = new URLSearchParams();
+    if (search.trim()) params.set('search', search.trim());
+    if (statusFilter) params.set('status', statusFilter);
+    if (deptFilter) params.set('department', deptFilter);
 
-  useEffect(() => { load(); }, []);
+    return fetch(`/api/admin/jobs?${params}`)
+      .then((r) => r.json())
+      .then((d) => {
+        setJobs(d.jobs || []);
+        if (d.stats) setStats(d.stats);
+      });
+  }, [search, statusFilter, deptFilter]);
 
-  const resetForm = () => {
-    setForm({ title: '', department: '', employmentType: 'Full-Time', salary: '', location: '', description: '', requirements: '', benefits: '', status: 'Open' });
-    setEditing(null);
-    setShowForm(false);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const url = editing ? `/api/admin/jobs/${editing.id}` : '/api/admin/jobs';
-    const method = editing ? 'PATCH' : 'POST';
-    const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
-    if (res.ok) {
-      toast.success(editing ? 'Job updated' : 'Job created');
-      resetForm();
-      load();
-    } else {
-      toast.error('Failed to save job');
-    }
-  };
-
-  const handleEdit = (job: Job) => {
-    setEditing(job);
-    setForm({
-      title: job.title, department: job.department || '', employmentType: job.employmentType,
-      salary: job.salary || '', location: job.location || '', description: '',
-      requirements: '', benefits: '', status: job.status,
+  const loadMeta = () =>
+    Promise.all([
+      fetch('/api/admin/jobs/lookups').then((r) => r.json()),
+      fetch('/api/admin/jobs/templates').then((r) => r.json()),
+    ]).then(([lookupData, templateData]) => {
+      if (lookupData.lookups) setLookups(lookupData.lookups);
+      if (templateData.templates) setTemplates(templateData.templates);
     });
-    fetch(`/api/admin/jobs/${job.id}`).then((r) => r.json()).then((d) => {
-      if (d.job) setForm((f) => ({ ...f, description: d.job.description, requirements: d.job.requirements || '', benefits: d.job.benefits || '' }));
-    });
+
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([loadJobs(), loadMeta()]).finally(() => setLoading(false));
+  }, [loadJobs]);
+
+  const openCreate = () => {
+    setEditingId(null);
+    setFormInitial({});
     setShowForm(true);
   };
 
+  const openEdit = async (job: JobCardData) => {
+    setEditingId(job.id);
+    const res = await fetch(`/api/admin/jobs/${job.id}`);
+    const data = await res.json();
+    if (data.job) {
+      const j = data.job;
+      setFormInitial({
+        title: j.title,
+        department: j.department || '',
+        employmentType: j.employmentType,
+        salary: j.salary || '',
+        location: j.location || '',
+        description: j.description,
+        requirements: linesToArray(j.requirements),
+        benefits: linesToArray(j.benefits),
+        status: j.status,
+      });
+    }
+    setShowForm(true);
+  };
+
+  const handleDuplicate = async (id: number) => {
+    const res = await fetch(`/api/admin/jobs/${id}/duplicate`, { method: 'POST' });
+    if (res.ok) {
+      toast.success('Job duplicated as draft');
+      loadJobs();
+    } else toast.error('Failed to duplicate');
+  };
+
+  const handleArchive = async (id: number) => {
+    const res = await fetch(`/api/admin/jobs/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'Archived' }),
+    });
+    if (res.ok) { toast.success('Job archived'); loadJobs(); }
+    else toast.error('Failed to archive');
+  };
+
+  const handlePublish = async (id: number) => {
+    const res = await fetch(`/api/admin/jobs/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'Open' }),
+    });
+    if (res.ok) { toast.success('Job published'); loadJobs(); }
+    else toast.error('Failed to publish');
+  };
+
   const handleDelete = async (id: number) => {
-    if (!confirm('Delete this job?')) return;
+    if (!confirm('Permanently delete this job posting?')) return;
     const res = await fetch(`/api/admin/jobs/${id}`, { method: 'DELETE' });
-    if (res.ok) { toast.success('Job deleted'); load(); }
+    if (res.ok) { toast.success('Job deleted'); loadJobs(); }
     else toast.error('Failed to delete');
   };
 
-  const toggleStatus = async (job: Job) => {
-    const newStatus = job.status === 'Open' ? 'Closed' : 'Open';
-    await fetch(`/api/admin/jobs/${job.id}`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus }),
-    });
-    toast.success(`Job ${newStatus.toLowerCase()}`);
-    load();
-  };
+  const statCards = [
+    { label: 'All Jobs', value: stats.Total, filter: '' },
+    { label: 'Open', value: stats.Open, filter: 'Open' },
+    { label: 'Draft', value: stats.Draft, filter: 'Draft' },
+    { label: 'Closed', value: stats.Closed, filter: 'Closed' },
+    { label: 'Archived', value: stats.Archived, filter: 'Archived' },
+  ];
 
   return (
-    <div className="saas-page">
+    <div className="saas-page ats-jobs-page">
       <div className="saas-page-header">
         <div>
           <h1>Job Management</h1>
-          <p className="saas-subtitle">Create and manage open positions</p>
+          <p className="saas-subtitle">Create, publish, and manage job postings</p>
         </div>
-        <button type="button" className="saas-btn saas-btn-primary" onClick={() => { resetForm(); setShowForm(true); }}>
+        <button type="button" className="saas-btn saas-btn-primary" onClick={openCreate}>
           <Plus size={16} /> Create Job
         </button>
       </div>
 
-      {showForm && (
-        <div className="saas-card saas-job-form">
-          <h3>{editing ? 'Edit Job' : 'New Job'}</h3>
-          <form onSubmit={handleSubmit}>
-            <div className="saas-form-row">
-              <div className="saas-form-group"><label>Title *</label><input required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
-              <div className="saas-form-group"><label>Department</label><input value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} /></div>
-            </div>
-            <div className="saas-form-row">
-              <div className="saas-form-group">
-                <label>Employment Type</label>
-                <select value={form.employmentType} onChange={(e) => setForm({ ...form, employmentType: e.target.value })}>
-                  <option>Full-Time</option><option>Part-Time</option><option>Contract</option>
-                </select>
-              </div>
-              <div className="saas-form-group"><label>Salary</label><input value={form.salary} onChange={(e) => setForm({ ...form, salary: e.target.value })} placeholder="e.g. $15-18/hr" /></div>
-              <div className="saas-form-group"><label>Location</label><input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} /></div>
-            </div>
-            <div className="saas-form-group"><label>Description *</label><textarea required rows={4} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
-            <div className="saas-form-group"><label>Requirements</label><textarea rows={3} value={form.requirements} onChange={(e) => setForm({ ...form, requirements: e.target.value })} /></div>
-            <div className="saas-form-group"><label>Benefits</label><textarea rows={2} value={form.benefits} onChange={(e) => setForm({ ...form, benefits: e.target.value })} /></div>
-            <div className="saas-confirm-actions">
-              <button type="submit" className="saas-btn saas-btn-primary">{editing ? 'Update' : 'Create'} Job</button>
-              <button type="button" className="saas-btn saas-btn-ghost" onClick={resetForm}>Cancel</button>
-            </div>
-          </form>
+      <div className="ats-stats-row">
+        {statCards.map((s) => (
+          <button
+            key={s.label}
+            type="button"
+            className={`ats-stat-card ${statusFilter === s.filter ? 'active' : ''}`}
+            onClick={() => setStatusFilter(s.filter)}
+          >
+            <span className="ats-stat-value">{s.value}</span>
+            <span className="ats-stat-label">{s.label}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="ats-toolbar">
+        <div className="ats-search-wrap">
+          <Search size={16} />
+          <input
+            type="search"
+            placeholder="Search jobs by title, department, or location..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <div className="ats-filters">
+          <Filter size={16} />
+          <select value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)}>
+            <option value="">All Departments</option>
+            {lookups.department.map((d) => (
+              <option key={d} value={d}>{d}</option>
+            ))}
+          </select>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            <option value="">All Statuses</option>
+            {JOB_STATUSES.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {templates.length > 0 && !showForm && (
+        <div className="ats-templates-banner">
+          <LayoutTemplate size={18} />
+          <span>{templates.length} job templates available — create a job to start from a template</span>
         </div>
       )}
 
       {loading ? (
         <div className="saas-loading">Loading jobs...</div>
       ) : jobs.length === 0 ? (
-        <div className="saas-empty-state"><Briefcase size={48} strokeWidth={1} /><h3>No jobs yet</h3><p>Create your first job posting.</p></div>
+        <div className="saas-empty-state">
+          <Briefcase size={48} strokeWidth={1} />
+          <h3>{search || statusFilter || deptFilter ? 'No matching jobs' : 'No jobs yet'}</h3>
+          <p>{search || statusFilter || deptFilter ? 'Try adjusting your filters.' : 'Create your first job posting to get started.'}</p>
+          {!search && !statusFilter && !deptFilter && (
+            <button type="button" className="saas-btn saas-btn-primary" onClick={openCreate}>
+              <Plus size={16} /> Create Job
+            </button>
+          )}
+        </div>
       ) : (
-        <div className="saas-jobs-grid">
+        <div className="ats-jobs-grid">
           {jobs.map((job) => (
-            <div key={job.id} className="saas-card saas-job-card">
-              <div className="saas-job-card-header">
-                <span className={`saas-job-status ${job.status === 'Open' ? 'open' : 'closed'}`}>{job.status}</span>
-                <div className="saas-job-actions">
-                  <button type="button" className="saas-icon-btn" onClick={() => handleEdit(job)}><Pencil size={14} /></button>
-                  <button type="button" className="saas-icon-btn" onClick={() => handleDelete(job.id)}><Trash2 size={14} /></button>
-                </div>
-              </div>
-              <h3>{job.title}</h3>
-              <div className="saas-job-meta">
-                {job.location && <span><MapPin size={14} /> {job.location}</span>}
-                <span><Briefcase size={14} /> {job.employmentType}</span>
-                <span><Users size={14} /> {job._count.applicants} applicants</span>
-              </div>
-              <div className="saas-job-card-footer">
-                <Link href={`/jobs/${job.slug}`} target="_blank" className="saas-link">View apply page</Link>
-                <button type="button" className="saas-btn saas-btn-outline saas-btn-sm" onClick={() => toggleStatus(job)}>
-                  {job.status === 'Open' ? 'Close Job' : 'Reopen Job'}
-                </button>
-              </div>
-            </div>
+            <JobCard
+              key={job.id}
+              job={job}
+              onEdit={openEdit}
+              onDuplicate={handleDuplicate}
+              onArchive={handleArchive}
+              onDelete={handleDelete}
+              onPublish={handlePublish}
+            />
           ))}
         </div>
+      )}
+
+      {showForm && (
+        <JobFormPanel
+          editingId={editingId}
+          initialValues={formInitial}
+          lookups={lookups}
+          templates={templates}
+          onClose={() => setShowForm(false)}
+          onSaved={loadJobs}
+          onLookupsChange={setLookups}
+          onTemplatesChange={setTemplates}
+        />
       )}
     </div>
   );

@@ -12,7 +12,7 @@ const jobSchema = z.object({
   requirements: z.string().optional().nullable(),
   benefits: z.string().optional().nullable(),
   location: z.string().optional().nullable(),
-  status: z.enum(['Open', 'Closed']).optional(),
+  status: z.enum(['Open', 'Closed', 'Draft', 'Archived']).optional(),
 });
 
 type RouteParams = { params: Promise<{ id: string }> };

@@ -31,39 +31,6 @@ export async function ensureDefaultCompany() {
   }
 }
 
-export async function ensureDefaultJobs() {
-  const count = await prisma.job.count({ where: { companyId: 1 } });
-  if (count > 0) return;
-
-  const defaultJobs = [
-    {
-      title: 'Customer Service / Print & Shipping Associate',
-      slug: 'customer-service-print-shipping',
-      department: 'Operations',
-      employmentType: 'Full-Time',
-      location: 'On-site',
-      description: 'Join our team as a Customer Service / Print & Shipping Associate. Greet customers, process shipping orders, handle printing services, and operate the POS system.',
-      requirements: 'Friendly attitude\nReliable and punctual\nBasic computer skills\nCustomer service experience preferred\nMust be authorized to work in the United States',
-      benefits: 'Flexible scheduling\nTeam environment\nGrowth opportunities',
-    },
-    {
-      title: 'Part-Time Associate',
-      slug: 'part-time-associate',
-      department: 'Operations',
-      employmentType: 'Part-Time',
-      location: 'On-site',
-      description: 'Flexible part-time position assisting with customer service, shipping, and printing tasks.',
-      requirements: 'Friendly attitude\nReliable and punctual\nBasic computer skills',
-      benefits: 'Flexible hours\nTeam environment',
-    },
-  ];
-
-  for (const job of defaultJobs) {
-    await prisma.job.create({ data: { companyId: 1, ...job, status: 'Open' } });
-  }
-  console.log('Default jobs seeded.');
-}
-
 export async function ensureDefaultAdmin() {
   const adminEmail = process.env.ADMIN_EMAIL;
   const adminPassword = process.env.ADMIN_PASSWORD;

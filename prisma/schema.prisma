@@ -25,6 +25,8 @@ model Company {
   admins      Admin[]
   applicants  Applicant[]
   jobs        Job[]
+  jobTemplates JobTemplate[]
+  jobLookups  JobLookupOption[]
   interviews  Interview[]
   notes       ApplicantNote[]
   activities  ActivityLog[]
@@ -77,7 +79,8 @@ model Job {
   requirements    String?  @db.Text
   benefits        String?  @db.Text
   location        String?
-  status          String   @default("Open") // Open, Closed
+  status          String   @default("Draft") // Open, Closed, Draft, Archived
+  templateId      Int?     @map("template_id")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
@@ -86,7 +89,45 @@ model Job {
 
   @@unique([companyId, slug])
   @@index([companyId, status])
+  @@index([companyId, department])
   @@map("jobs")
+}
+
+model JobLookupOption {
+  id        Int      @id @default(autoincrement())
+  companyId Int      @default(1) @map("company_id")
+  category  String
+  value     String
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  company   Company  @relation(fields: [companyId], references: [id])
+
+  @@unique([companyId, category, value])
+  @@index([companyId, category])
+  @@map("job_lookup_options")
+}
+
+model JobTemplate {
+  id             Int      @id @default(autoincrement())
+  companyId      Int      @default(1) @map("company_id")
+  name           String
+  title          String
+  department     String?
+  employmentType String   @map("employment_type")
+  salary         String?
+  location       String?
+  description    String   @db.Text
+  requirements   String?  @db.Text
+  benefits       String?  @db.Text
+  isSystem       Boolean  @default(false) @map("is_system")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  company        Company  @relation(fields: [companyId], references: [id])
+
+  @@unique([companyId, name])
+  @@map("job_templates")
 }
 
 model Applicant {

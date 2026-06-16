@@ -1,11 +1,13 @@
 import prisma from '../src/lib/prisma';
-import { ensureDefaultAdmin, ensureDefaultCompany, ensureDefaultJobs } from '../src/lib/admin';
+import { ensureDefaultAdmin, ensureDefaultCompany } from '../src/lib/admin';
+import { ensureJobLookups, ensureJobTemplates } from '../src/lib/job-seed';
 
 async function main() {
   console.log('Seeding database...');
   await ensureDefaultCompany();
   await ensureDefaultAdmin();
-  await ensureDefaultJobs();
+  await ensureJobLookups();
+  await ensureJobTemplates();
   console.log('Seed complete.');
 }
 
