@@ -4,13 +4,20 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import type { StoreConfig } from '@/lib/config';
 
 const defaultConfig: StoreConfig = {
+  companyId: 1,
+  companySlug: 'default',
   storeName: 'The UPS Store Hiring Portal',
   storeAddress: '',
+  storePhone: '',
+  storeWebsite: '',
   ownerEmail: '',
   primaryColor: '#351C15',
   accentColor: '#FFB500',
   description: '',
   logoUrl: '',
+  timezone: 'America/New_York',
+  footer: '',
+  socialLinks: {},
 };
 
 const ConfigContext = createContext<{ config: StoreConfig; loading: boolean }>({

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
+import { requireActiveTenant } from '@/lib/auth';
+import { tenantWhereId, notFound } from '@/lib/tenant';
 import { statusSchema } from '@/lib/validation';
 import { sendStatusChangeEmail } from '@/lib/email';
 import { logActivity } from '@/lib/activity';
@@ -8,10 +9,9 @@ import { logActivity } from '@/lib/activity';
 type RouteParams = { params: Promise<{ id: string }> };
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-  }
+  const auth = await requireActiveTenant();
+  if ('error' in auth) return auth.error;
+  const { session, companyId } = auth;
 
   try {
     const { id } = await params;
@@ -26,10 +26,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
     }
 
-    const previous = await prisma.applicant.findUnique({ where: { id: applicantId } });
-    if (!previous) {
-      return NextResponse.json({ error: 'Applicant not found' }, { status: 404 });
-    }
+    const previous = await prisma.applicant.findFirst({
+      where: tenantWhereId(companyId, applicantId),
+    });
+    if (!previous) return notFound('Applicant not found');
 
     const applicant = await prisma.applicant.update({
       where: { id: applicantId },
@@ -42,6 +42,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         details: `${previous.firstName} ${previous.lastName}: ${previous.status} → ${parsed.data.status}`,
         applicantId,
         adminId: session.id,
+        companyId,
       });
       sendStatusChangeEmail(applicant, parsed.data.status).catch(console.error);
     }

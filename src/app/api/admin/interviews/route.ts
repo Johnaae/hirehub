@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
+import { requireActiveTenant } from '@/lib/auth';
+import { tenantWhere, tenantWhereId, notFound } from '@/lib/tenant';
 import { sendInterviewEmail, sendStatusChangeEmail } from '@/lib/email';
 import { logActivity } from '@/lib/activity';
 import { getStoreConfig } from '@/lib/config';
-import { DEFAULT_COMPANY_ID } from '@/lib/company';
 import { z } from 'zod';
 
 const interviewSchema = z.object({
@@ -15,11 +15,12 @@ const interviewSchema = z.object({
 });
 
 export async function GET() {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  const auth = await requireActiveTenant();
+  if ('error' in auth) return auth.error;
+  const { companyId } = auth;
 
   const interviews = await prisma.interview.findMany({
-    where: { companyId: DEFAULT_COMPANY_ID },
+    where: tenantWhere(companyId),
     include: {
       applicant: { select: { firstName: true, lastName: true, email: true, position: true } },
       admin: { select: { email: true, name: true } },
@@ -31,8 +32,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  const auth = await requireActiveTenant();
+  if ('error' in auth) return auth.error;
+  const { session, companyId } = auth;
 
   const body = await request.json();
   const parsed = interviewSchema.safeParse(body);
@@ -41,12 +43,14 @@ export async function POST(request: NextRequest) {
   }
 
   const data = parsed.data;
-  const applicant = await prisma.applicant.findUnique({ where: { id: data.applicantId } });
-  if (!applicant) return NextResponse.json({ error: 'Applicant not found' }, { status: 404 });
+  const applicant = await prisma.applicant.findFirst({
+    where: tenantWhereId(companyId, data.applicantId),
+  });
+  if (!applicant) return notFound('Applicant not found');
 
   const interview = await prisma.interview.create({
     data: {
-      companyId: DEFAULT_COMPANY_ID,
+      companyId,
       applicantId: data.applicantId,
       adminId: session.id,
       scheduledAt: new Date(data.scheduledAt),
@@ -69,9 +73,10 @@ export async function POST(request: NextRequest) {
     details: `${applicant.firstName} ${applicant.lastName} — ${new Date(data.scheduledAt).toLocaleString()}`,
     applicantId: data.applicantId,
     adminId: session.id,
+    companyId,
   });
 
-  const config = await getStoreConfig();
+  const config = await getStoreConfig(companyId);
   sendInterviewEmail(applicant, interview, config.storeName).catch(console.error);
   sendStatusChangeEmail(applicant, 'Interview').catch(console.error);
 

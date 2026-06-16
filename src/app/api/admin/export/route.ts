@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
-import { DEFAULT_COMPANY_ID } from '@/lib/company';
+import { requireActiveTenant } from '@/lib/auth';
+import { tenantWhere } from '@/lib/tenant';
 import * as XLSX from 'xlsx';
 
 export async function GET(request: NextRequest) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  const auth = await requireActiveTenant();
+  if ('error' in auth) return auth.error;
+  const { companyId } = auth;
 
   const format = request.nextUrl.searchParams.get('format') || 'csv';
 
   const applicants = await prisma.applicant.findMany({
-    where: { companyId: DEFAULT_COMPANY_ID },
+    where: tenantWhere(companyId),
     orderBy: { createdAt: 'desc' },
   });
 
@@ -70,7 +71,6 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // CSV default
   const headers = Object.keys(rows[0] || {});
   const csv = [
     headers.join(','),

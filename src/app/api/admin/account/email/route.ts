@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getSession, clearSession } from '@/lib/auth';
+import { requireActiveTenant, clearSession } from '@/lib/auth';
 import { z } from 'zod';
 
 const emailSchema = z.object({
@@ -8,8 +8,9 @@ const emailSchema = z.object({
 });
 
 export async function PATCH(request: NextRequest) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  const auth = await requireActiveTenant();
+  if ('error' in auth) return auth.error;
+  const { session } = auth;
 
   const body = await request.json();
   const parsed = emailSchema.safeParse(body);

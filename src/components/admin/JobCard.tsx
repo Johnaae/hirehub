@@ -25,6 +25,7 @@ const STATUS_STYLES: Record<string, string> = {
   Closed: 'closed',
   Draft: 'draft',
   Archived: 'archived',
+  Paused: 'paused',
 };
 
 interface JobCardProps {

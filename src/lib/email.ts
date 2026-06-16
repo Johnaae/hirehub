@@ -69,7 +69,7 @@ export async function sendEmail(to: string, subject: string, html: string, text:
 
 export async function sendNewApplicationEmail(applicant: Applicant) {
   const config = await getStoreConfig();
-  const ownerEmail = await getOwnerNotificationEmail();
+  const ownerEmail = await getOwnerNotificationEmail(applicant.companyId);
   if (!ownerEmail) return { sent: false, reason: 'Notification email not configured' };
 
   const fullName = `${applicant.firstName} ${applicant.lastName}`;

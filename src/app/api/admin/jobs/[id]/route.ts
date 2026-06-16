@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
+import { requireActiveTenant } from '@/lib/auth';
+import { tenantWhereId, notFound } from '@/lib/tenant';
+import { JOB_STATUSES } from '@/lib/jobs';
 import { z } from 'zod';
 
 const jobSchema = z.object({
@@ -12,30 +14,37 @@ const jobSchema = z.object({
   requirements: z.string().optional().nullable(),
   benefits: z.string().optional().nullable(),
   location: z.string().optional().nullable(),
-  status: z.enum(['Open', 'Closed', 'Draft', 'Archived']).optional(),
+  status: z.enum(JOB_STATUSES).optional(),
+  openings: z.number().int().positive().optional(),
 });
 
 type RouteParams = { params: Promise<{ id: string }> };
 
 export async function GET(_req: NextRequest, { params }: RouteParams) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  const auth = await requireActiveTenant();
+  if ('error' in auth) return auth.error;
+  const { companyId } = auth;
 
   const { id } = await params;
-  const job = await prisma.job.findUnique({
-    where: { id: parseInt(id, 10) },
+  const jobId = parseInt(id, 10);
+  const job = await prisma.job.findFirst({
+    where: tenantWhereId(companyId, jobId),
     include: { _count: { select: { applicants: true } } },
   });
-  if (!job) return NextResponse.json({ error: 'Job not found' }, { status: 404 });
+  if (!job) return notFound('Job not found');
   return NextResponse.json({ job });
 }
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  const auth = await requireActiveTenant();
+  if ('error' in auth) return auth.error;
+  const { companyId } = auth;
 
   const { id } = await params;
   const jobId = parseInt(id, 10);
+  const existing = await prisma.job.findFirst({ where: tenantWhereId(companyId, jobId) });
+  if (!existing) return notFound('Job not found');
+
   const body = await request.json();
   const parsed = jobSchema.safeParse(body);
   if (!parsed.success) {
@@ -50,10 +59,15 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 }
 
 export async function DELETE(_req: NextRequest, { params }: RouteParams) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  const auth = await requireActiveTenant();
+  if ('error' in auth) return auth.error;
+  const { companyId } = auth;
 
   const { id } = await params;
-  await prisma.job.delete({ where: { id: parseInt(id, 10) } });
+  const jobId = parseInt(id, 10);
+  const existing = await prisma.job.findFirst({ where: tenantWhereId(companyId, jobId) });
+  if (!existing) return notFound('Job not found');
+
+  await prisma.job.delete({ where: { id: jobId } });
   return NextResponse.json({ message: 'Job deleted' });
 }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
-import { DEFAULT_COMPANY_ID } from '@/lib/company';
+import { requireActiveTenant } from '@/lib/auth';
+import { tenantWhere } from '@/lib/tenant';
 import { z } from 'zod';
 
 const templateSchema = z.object({
@@ -17,11 +17,12 @@ const templateSchema = z.object({
 });
 
 export async function GET() {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  const auth = await requireActiveTenant();
+  if ('error' in auth) return auth.error;
+  const { companyId } = auth;
 
   const templates = await prisma.jobTemplate.findMany({
-    where: { companyId: DEFAULT_COMPANY_ID },
+    where: tenantWhere(companyId),
     orderBy: [{ isSystem: 'desc' }, { name: 'asc' }],
   });
 
@@ -29,8 +30,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  const auth = await requireActiveTenant();
+  if ('error' in auth) return auth.error;
+  const { companyId } = auth;
 
   const body = await request.json();
   const parsed = templateSchema.safeParse(body);
@@ -41,7 +43,7 @@ export async function POST(request: NextRequest) {
   const data = parsed.data;
 
   const existing = await prisma.jobTemplate.findUnique({
-    where: { companyId_name: { companyId: DEFAULT_COMPANY_ID, name: data.name } },
+    where: { companyId_name: { companyId, name: data.name } },
   });
   if (existing) {
     return NextResponse.json({ error: 'A template with this name already exists' }, { status: 409 });
@@ -49,7 +51,7 @@ export async function POST(request: NextRequest) {
 
   const template = await prisma.jobTemplate.create({
     data: {
-      companyId: DEFAULT_COMPANY_ID,
+      companyId,
       isSystem: false,
       ...data,
     },

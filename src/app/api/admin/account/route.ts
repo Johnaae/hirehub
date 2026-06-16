@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
+import { requireActiveTenant } from '@/lib/auth';
 import { z } from 'zod';
 
 const profileSchema = z.object({
@@ -12,8 +12,9 @@ const profileSchema = z.object({
 });
 
 export async function GET() {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  const auth = await requireActiveTenant();
+  if ('error' in auth) return auth.error;
+  const { session } = auth;
 
   const admin = await prisma.admin.findUnique({
     where: { id: session.id },
@@ -34,8 +35,9 @@ export async function GET() {
 }
 
 export async function PATCH(request: NextRequest) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  const auth = await requireActiveTenant();
+  if ('error' in auth) return auth.error;
+  const { session } = auth;
 
   const body = await request.json();
   const parsed = profileSchema.safeParse(body);

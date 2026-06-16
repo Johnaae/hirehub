@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
+import { requireActiveTenant } from '@/lib/auth';
+import { tenantWhere } from '@/lib/tenant';
 import { STATUSES } from '@/lib/constants';
-import { DEFAULT_COMPANY_ID } from '@/lib/company';
 
 export async function GET(request: NextRequest) {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-  }
+  const auth = await requireActiveTenant();
+  if ('error' in auth) return auth.error;
+  const { companyId } = auth;
 
   try {
     const { searchParams } = request.nextUrl;
@@ -24,7 +23,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid status filter' }, { status: 400 });
     }
 
-    const where: Record<string, unknown> = { companyId: DEFAULT_COMPANY_ID };
+    const where: Record<string, unknown> = tenantWhere(companyId);
 
     if (search) {
       where.OR = [
@@ -64,7 +63,7 @@ export async function GET(request: NextRequest) {
     ]);
 
     const positions = await prisma.applicant.findMany({
-      where: { companyId: DEFAULT_COMPANY_ID },
+      where: tenantWhere(companyId),
       select: { position: true },
       distinct: ['position'],
     });

@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
+import { requireActiveTenant } from '@/lib/auth';
+import { tenantWhereId, notFound } from '@/lib/tenant';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
 export async function GET(_request: NextRequest, { params }: RouteParams) {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-  }
+  const auth = await requireActiveTenant();
+  if ('error' in auth) return auth.error;
+  const { companyId } = auth;
 
   try {
     const { id } = await params;
@@ -17,13 +17,13 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Invalid applicant ID' }, { status: 400 });
     }
 
-    const applicant = await prisma.applicant.findUnique({
-      where: { id: applicantId },
+    const applicant = await prisma.applicant.findFirst({
+      where: tenantWhereId(companyId, applicantId),
       select: { resumeUrl: true, resumeFilename: true },
     });
 
     if (!applicant?.resumeUrl) {
-      return NextResponse.json({ error: 'Resume not found' }, { status: 404 });
+      return notFound('Resume not found');
     }
 
     return NextResponse.redirect(applicant.resumeUrl);

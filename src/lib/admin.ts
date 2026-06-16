@@ -11,11 +11,14 @@ export async function ensureDefaultCompany() {
       data: {
         id: 1,
         name: storeName,
-        slug: 'default',
+        slug: process.env.COMPANY_SLUG || 'default',
         address: process.env.STORE_ADDRESS || null,
         email: process.env.OWNER_EMAIL || null,
+        ownerEmail: process.env.OWNER_EMAIL || null,
         primaryColor: process.env.PRIMARY_COLOR || '#351C15',
         accentColor: process.env.ACCENT_COLOR || '#FFB500',
+        status: 'active',
+        subscriptionStatus: 'active',
         settings: {
           create: {
             ownerEmail: process.env.OWNER_EMAIL || null,
@@ -28,12 +31,45 @@ export async function ensureDefaultCompany() {
       },
     });
     console.log('Default company created.');
+  } else {
+    await prisma.company.update({
+      where: { id: 1 },
+      data: {
+        status: existing.status || 'active',
+        subscriptionStatus: existing.subscriptionStatus || 'active',
+        ownerEmail: existing.ownerEmail || process.env.OWNER_EMAIL || existing.email,
+      },
+    });
   }
 }
 
+export async function migrateExistingDataToMultitenant() {
+  console.log('Running multi-tenant migration...');
+
+  await ensureDefaultCompany();
+
+  const admins = await prisma.admin.findMany();
+  for (const admin of admins) {
+    if (!admin.role) {
+      await prisma.admin.update({
+        where: { id: admin.id },
+        data: { role: 'OWNER', companyId: admin.companyId || 1 },
+      });
+    }
+  }
+
+  console.log('Multi-tenant migration complete.');
+}
+
 export async function ensureDefaultAdmin() {
-  const adminCount = await prisma.admin.count();
+  await migrateExistingDataToMultitenant();
+
+  const adminCount = await prisma.admin.count({ where: { role: { not: 'SUPER_ADMIN' } } });
   if (adminCount > 0) {
+    await prisma.admin.updateMany({
+      where: { role: { not: 'SUPER_ADMIN' } },
+      data: { role: 'OWNER' },
+    });
     return;
   }
 
@@ -52,10 +88,41 @@ export async function ensureDefaultAdmin() {
       passwordHash,
       companyId: 1,
       name: 'Store Owner',
+      role: 'OWNER',
       notificationEmail: process.env.OWNER_EMAIL?.toLowerCase() || adminEmail.toLowerCase(),
     },
   });
-  console.log(`Default admin created: ${adminEmail}`);
+  console.log(`Default owner created: ${adminEmail}`);
+}
+
+export async function ensureSuperAdmin() {
+  const superEmail = process.env.SUPER_ADMIN_EMAIL;
+  const superPassword = process.env.SUPER_ADMIN_PASSWORD;
+
+  if (!superEmail || !superPassword) return;
+
+  const existing = await prisma.admin.findUnique({ where: { email: superEmail.toLowerCase() } });
+  if (existing) {
+    if (existing.role !== 'SUPER_ADMIN') {
+      await prisma.admin.update({
+        where: { id: existing.id },
+        data: { role: 'SUPER_ADMIN' },
+      });
+    }
+    return;
+  }
+
+  const passwordHash = await bcrypt.hash(superPassword, 12);
+  await prisma.admin.create({
+    data: {
+      email: superEmail.toLowerCase(),
+      passwordHash,
+      companyId: 1,
+      name: 'Platform Admin',
+      role: 'SUPER_ADMIN',
+    },
+  });
+  console.log(`Super admin created: ${superEmail}`);
 }
 
 export { slugify };

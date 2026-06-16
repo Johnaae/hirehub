@@ -1,17 +1,15 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
-import { DEFAULT_COMPANY_ID } from '@/lib/company';
-import { startOfMonth, startOfDay, subDays } from 'date-fns';
+import { requireActiveTenant } from '@/lib/auth';
+import { tenantWhere } from '@/lib/tenant';
+import { startOfMonth, startOfDay } from 'date-fns';
 
 export async function GET() {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-  }
+  const auth = await requireActiveTenant();
+  if ('error' in auth) return auth.error;
+  const { companyId } = auth;
 
   try {
-    const companyId = DEFAULT_COMPANY_ID;
     const now = new Date();
     const monthStart = startOfMonth(now);
     const todayStart = startOfDay(now);
@@ -19,6 +17,7 @@ export async function GET() {
     const [
       total,
       statusCounts,
+      openJobs,
       monthApplicants,
       positionCounts,
       recentApplicants,
@@ -27,26 +26,27 @@ export async function GET() {
       recentActivity,
       todayNew,
     ] = await Promise.all([
-      prisma.applicant.count({ where: { companyId } }),
+      prisma.applicant.count({ where: tenantWhere(companyId) }),
       prisma.applicant.groupBy({
         by: ['status'],
-        where: { companyId },
+        where: tenantWhere(companyId),
         _count: { status: true },
       }),
+      prisma.job.count({ where: tenantWhere(companyId, { status: 'Open' }) }),
       prisma.applicant.findMany({
-        where: { companyId, createdAt: { gte: monthStart } },
+        where: tenantWhere(companyId, { createdAt: { gte: monthStart } }),
         select: { createdAt: true },
         orderBy: { createdAt: 'asc' },
       }),
       prisma.applicant.groupBy({
         by: ['position'],
-        where: { companyId },
+        where: tenantWhere(companyId),
         _count: { position: true },
         orderBy: { _count: { position: 'desc' } },
         take: 8,
       }),
       prisma.applicant.findMany({
-        where: { companyId },
+        where: tenantWhere(companyId),
         select: {
           id: true, firstName: true, lastName: true, position: true,
           status: true, createdAt: true, email: true,
@@ -55,7 +55,7 @@ export async function GET() {
         take: 5,
       }),
       prisma.interview.findMany({
-        where: { companyId, scheduledAt: { gte: now }, status: 'Scheduled' },
+        where: tenantWhere(companyId, { scheduledAt: { gte: now }, status: 'Scheduled' }),
         include: {
           applicant: { select: { firstName: true, lastName: true, position: true } },
         },
@@ -63,13 +63,13 @@ export async function GET() {
         take: 5,
       }),
       prisma.applicant.findMany({
-        where: { companyId, status: 'Hired' },
+        where: tenantWhere(companyId, { status: 'Hired' }),
         select: { id: true, firstName: true, lastName: true, position: true, updatedAt: true },
         orderBy: { updatedAt: 'desc' },
         take: 5,
       }),
       prisma.activityLog.findMany({
-        where: { companyId },
+        where: tenantWhere(companyId),
         include: {
           admin: { select: { email: true, name: true } },
           applicant: { select: { firstName: true, lastName: true } },
@@ -78,7 +78,7 @@ export async function GET() {
         take: 10,
       }),
       prisma.applicant.count({
-        where: { companyId, createdAt: { gte: todayStart } },
+        where: tenantWhere(companyId, { createdAt: { gte: todayStart } }),
       }),
     ]);
 
@@ -103,6 +103,7 @@ export async function GET() {
 
     return NextResponse.json({
       stats,
+      openJobs,
       todayNew,
       applicantsByDay,
       applicantsByStatus: statusCounts.map((s) => ({ status: s.status, count: s._count.status })),

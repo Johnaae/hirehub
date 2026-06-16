@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import {
   signAdminToken,
@@ -7,6 +8,8 @@ import {
   COOKIE_NAME,
   type AdminSession,
 } from './jwt';
+import { assertCompanyActive } from './company-service';
+import { isSuperAdmin, requireAdminSession } from './tenant';
 
 export type { AdminSession };
 
@@ -34,6 +37,30 @@ export async function setSession(admin: AdminSession) {
   const token = await signAdminToken(admin);
   const cookieStore = await cookies();
   cookieStore.set(COOKIE_NAME, token, getAuthCookieOptions());
+}
+
+export async function requireActiveTenant(): Promise<
+  | { session: AdminSession; companyId: number }
+  | { error: NextResponse }
+> {
+  const result = await requireAdminSession();
+  if ('error' in result) return result;
+
+  if (isSuperAdmin(result.session) && !result.session.impersonateCompanyId) {
+    return result;
+  }
+
+  const check = await assertCompanyActive(result.companyId);
+  if (!check.ok) {
+    return {
+      error: NextResponse.json(
+        { error: check.reason, suspended: check.reason === 'Company suspended' },
+        { status: 403 }
+      ),
+    };
+  }
+
+  return result;
 }
 
 export { signAdminToken, verifyAdminToken, getAuthCookieOptions, COOKIE_NAME };

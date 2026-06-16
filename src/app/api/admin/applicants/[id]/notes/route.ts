@@ -1,17 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
+import { requireActiveTenant } from '@/lib/auth';
+import { tenantWhereId, notFound } from '@/lib/tenant';
 import { notesSchema } from '@/lib/validation';
-import { DEFAULT_COMPANY_ID } from '@/lib/company';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
 export async function GET(_request: NextRequest, { params }: RouteParams) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  const auth = await requireActiveTenant();
+  if ('error' in auth) return auth.error;
+  const { companyId } = auth;
 
   const { id } = await params;
   const applicantId = parseInt(id, 10);
+
+  const applicant = await prisma.applicant.findFirst({
+    where: tenantWhereId(companyId, applicantId),
+  });
+  if (!applicant) return notFound('Applicant not found');
 
   const notes = await prisma.applicantNote.findMany({
     where: { applicantId },
@@ -23,10 +29,9 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 }
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-  }
+  const auth = await requireActiveTenant();
+  if ('error' in auth) return auth.error;
+  const { session, companyId } = auth;
 
   try {
     const { id } = await params;
@@ -35,13 +40,17 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Invalid applicant ID' }, { status: 400 });
     }
 
+    const applicant = await prisma.applicant.findFirst({
+      where: tenantWhereId(companyId, applicantId),
+    });
+    if (!applicant) return notFound('Applicant not found');
+
     const body = await request.json();
     const parsed = notesSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid notes' }, { status: 400 });
     }
 
-    // Upsert primary note for this admin/applicant
     const existing = await prisma.applicantNote.findFirst({
       where: { applicantId, adminId: session.id },
       orderBy: { updatedAt: 'desc' },
@@ -59,14 +68,13 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         data: {
           applicantId,
           adminId: session.id,
-          companyId: DEFAULT_COMPANY_ID,
+          companyId,
           content: parsed.data.notes,
         },
         include: { admin: { select: { email: true, name: true } } },
       });
     }
 
-    // Keep legacy field in sync
     await prisma.applicant.update({
       where: { id: applicantId },
       data: { notes: parsed.data.notes },

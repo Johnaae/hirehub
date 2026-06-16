@@ -1,4 +1,4 @@
-export const JOB_STATUSES = ['Open', 'Closed', 'Draft', 'Archived'] as const;
+export const JOB_STATUSES = ['Open', 'Closed', 'Draft', 'Archived', 'Paused'] as const;
 export type JobStatus = (typeof JOB_STATUSES)[number];
 
 export const LOOKUP_CATEGORIES = [

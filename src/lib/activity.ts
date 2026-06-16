@@ -1,17 +1,16 @@
 import prisma from './prisma';
-import { DEFAULT_COMPANY_ID } from './company';
 
 export async function logActivity(params: {
   action: string;
   details?: string;
   applicantId?: number;
   adminId?: number;
-  companyId?: number;
+  companyId: number;
 }) {
   try {
     await prisma.activityLog.create({
       data: {
-        companyId: params.companyId ?? DEFAULT_COMPANY_ID,
+        companyId: params.companyId,
         applicantId: params.applicantId,
         adminId: params.adminId,
         action: params.action,

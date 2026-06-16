@@ -1,27 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
-import { slugify, DEFAULT_COMPANY_ID } from '@/lib/company';
+import { requireActiveTenant } from '@/lib/auth';
+import { tenantWhere, tenantWhereId, notFound } from '@/lib/tenant';
+import { slugify } from '@/lib/company';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
 export async function POST(_req: NextRequest, { params }: RouteParams) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  const auth = await requireActiveTenant();
+  if ('error' in auth) return auth.error;
+  const { companyId } = auth;
 
   const { id } = await params;
   const jobId = parseInt(id, 10);
 
-  const original = await prisma.job.findUnique({ where: { id: jobId } });
-  if (!original) return NextResponse.json({ error: 'Job not found' }, { status: 404 });
+  const original = await prisma.job.findFirst({ where: tenantWhereId(companyId, jobId) });
+  if (!original) return notFound('Job not found');
 
   let slug = slugify(`${original.title}-copy`);
-  const existing = await prisma.job.findFirst({ where: { companyId: DEFAULT_COMPANY_ID, slug } });
+  const existing = await prisma.job.findFirst({ where: tenantWhere(companyId, { slug }) });
   if (existing) slug = `${slug}-${Date.now()}`;
 
   const job = await prisma.job.create({
     data: {
-      companyId: DEFAULT_COMPANY_ID,
+      companyId,
       slug,
       title: `${original.title} (Copy)`,
       department: original.department,
@@ -31,6 +33,7 @@ export async function POST(_req: NextRequest, { params }: RouteParams) {
       requirements: original.requirements,
       benefits: original.benefits,
       location: original.location,
+      openings: original.openings,
       status: 'Draft',
     },
   });

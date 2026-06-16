@@ -28,8 +28,14 @@ export default function LoginPageClient() {
         body: JSON.stringify({ email, password }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Login failed');
-      router.push(from);
+      if (!response.ok) {
+        if (data.suspended) {
+          router.push('/suspended');
+          return;
+        }
+        throw new Error(data.error || 'Login failed');
+      }
+      router.push(data.redirectTo || from);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');

@@ -7,88 +7,99 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Multi-tenant prep: all records scoped to a company (default company id=1)
 model Company {
-  id          Int      @id @default(autoincrement())
-  name        String
-  slug        String   @unique
-  logoUrl     String?  @map("logo_url")
-  address     String?
-  phone       String?
-  email       String?
-  description String?  @db.Text
-  primaryColor String  @default("#351C15") @map("primary_color")
-  accentColor  String  @default("#FFB500") @map("accent_color")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id                 Int      @id @default(autoincrement())
+  name               String
+  slug               String   @unique
+  logoUrl            String?  @map("logo_url")
+  address            String?
+  phone              String?
+  email              String?
+  website            String?
+  description        String?  @db.Text
+  timezone           String   @default("America/New_York")
+  ownerEmail         String?  @map("owner_email")
+  primaryColor       String   @default("#351C15") @map("primary_color")
+  accentColor        String   @default("#FFB500") @map("accent_color")
+  status             String   @default("active") // active, suspended
+  subscriptionStatus String   @default("trial") @map("subscription_status")
+  careerPageBanner   String?  @map("career_page_banner") @db.Text
+  footer             String?  @db.Text
+  socialLinks        Json?    @map("social_links")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
 
-  admins      Admin[]
-  applicants  Applicant[]
-  jobs        Job[]
+  admins       Admin[]
+  applicants   Applicant[]
+  jobs         Job[]
   jobTemplates JobTemplate[]
-  jobLookups  JobLookupOption[]
-  interviews  Interview[]
-  notes       ApplicantNote[]
-  activities  ActivityLog[]
-  settings    CompanySettings?
+  jobLookups   JobLookupOption[]
+  interviews   Interview[]
+  notes        ApplicantNote[]
+  activities   ActivityLog[]
+  settings     CompanySettings?
 
+  @@index([status])
   @@map("companies")
 }
 
 model CompanySettings {
-  id              Int     @id @default(autoincrement())
-  companyId       Int     @unique @map("company_id")
-  smtpHost        String? @map("smtp_host")
-  smtpPort        Int?    @map("smtp_port")
-  smtpUser        String? @map("smtp_user")
-  smtpPass        String? @map("smtp_pass")
-  ownerEmail      String? @map("owner_email")
-  uploadProvider  String  @default("uploadthing") @map("upload_provider")
-  sessionTimeout  Int     @default(480) @map("session_timeout")
-  company         Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  id             Int     @id @default(autoincrement())
+  companyId      Int     @unique @map("company_id")
+  smtpHost       String? @map("smtp_host")
+  smtpPort       Int?    @map("smtp_port")
+  smtpUser       String? @map("smtp_user")
+  smtpPass       String? @map("smtp_pass")
+  ownerEmail     String? @map("owner_email")
+  uploadProvider String  @default("uploadthing") @map("upload_provider")
+  sessionTimeout Int     @default(480) @map("session_timeout")
+  company        Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   @@map("company_settings")
 }
 
 model Admin {
   id                Int       @id @default(autoincrement())
-  companyId         Int       @default(1) @map("company_id")
+  companyId         Int       @map("company_id")
   email             String    @unique
   passwordHash      String    @map("password_hash")
   name              String?
+  role              String    @default("OWNER") // SUPER_ADMIN, OWNER, MANAGER
   notificationEmail String?   @map("notification_email")
   lastLoginAt       DateTime? @map("last_login_at")
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @default(now()) @map("updated_at")
 
-  company      Company  @relation(fields: [companyId], references: [id])
-  notes        ApplicantNote[]
-  activities   ActivityLog[]
-  interviews   Interview[]
+  company    Company         @relation(fields: [companyId], references: [id])
+  notes      ApplicantNote[]
+  activities ActivityLog[]
+  interviews Interview[]
 
   @@index([companyId])
+  @@index([companyId, role])
   @@map("admins")
 }
 
 model Job {
-  id              Int      @id @default(autoincrement())
-  companyId       Int      @default(1) @map("company_id")
-  title           String
-  slug            String
-  department      String?
-  employmentType  String   @map("employment_type")
-  salary          String?
-  description     String   @db.Text
-  requirements    String?  @db.Text
-  benefits        String?  @db.Text
-  location        String?
-  status          String   @default("Draft") // Open, Closed, Draft, Archived
-  templateId      Int?     @map("template_id")
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  id             Int      @id @default(autoincrement())
+  companyId      Int      @map("company_id")
+  title          String
+  slug           String
+  department     String?
+  employmentType String   @map("employment_type")
+  salary         String?
+  description    String   @db.Text
+  requirements   String?  @db.Text
+  benefits       String?  @db.Text
+  location       String?
+  status         String   @default("Draft") // Draft, Open, Paused, Closed, Archived
+  openings       Int      @default(1)
+  templateId     Int?     @map("template_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
-  company         Company  @relation(fields: [companyId], references: [id])
-  applicants      Applicant[]
+  company    Company     @relation(fields: [companyId], references: [id])
+  applicants Applicant[]
 
   @@unique([companyId, slug])
   @@index([companyId, status])
@@ -98,13 +109,13 @@ model Job {
 
 model JobLookupOption {
   id        Int      @id @default(autoincrement())
-  companyId Int      @default(1) @map("company_id")
+  companyId Int      @map("company_id")
   category  String
   value     String
   sortOrder Int      @default(0) @map("sort_order")
   createdAt DateTime @default(now()) @map("created_at")
 
-  company   Company  @relation(fields: [companyId], references: [id])
+  company Company @relation(fields: [companyId], references: [id])
 
   @@unique([companyId, category, value])
   @@index([companyId, category])
@@ -113,7 +124,7 @@ model JobLookupOption {
 
 model JobTemplate {
   id             Int      @id @default(autoincrement())
-  companyId      Int      @default(1) @map("company_id")
+  companyId      Int      @map("company_id")
   name           String
   title          String
   department     String?
@@ -127,18 +138,18 @@ model JobTemplate {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
-  company        Company  @relation(fields: [companyId], references: [id])
+  company Company @relation(fields: [companyId], references: [id])
 
   @@unique([companyId, name])
   @@map("job_templates")
 }
 
 model Applicant {
-  id                         Int      @id @default(autoincrement())
-  companyId                  Int      @default(1) @map("company_id")
-  jobId                      Int?     @map("job_id")
-  firstName                  String   @map("first_name")
-  lastName                   String   @map("last_name")
+  id                         Int       @id @default(autoincrement())
+  companyId                  Int       @map("company_id")
+  jobId                      Int?      @map("job_id")
+  firstName                  String    @map("first_name")
+  lastName                   String    @map("last_name")
   email                      String
   phone                      String
   address                    String
@@ -146,32 +157,32 @@ model Applicant {
   state                      String
   zip                        String
   position                   String
-  employmentType             String   @map("employment_type")
-  authorizedToWork           Boolean  @map("authorized_to_work")
-  over18                     Boolean  @map("over_18")
-  customerServiceExperience  Boolean  @map("customer_service_experience")
-  upsPrintShippingExperience Boolean  @map("ups_print_shipping_experience")
-  availableStartDate         DateTime @map("available_start_date") @db.Date
-  availabilityJson           Json     @map("availability_json")
-  previousEmployer             String?  @map("previous_employer")
-  previousJobTitle             String?  @map("previous_job_title")
-  previousStartDate            DateTime? @map("previous_start_date") @db.Date
-  previousEndDate              DateTime? @map("previous_end_date") @db.Date
-  reasonForLeaving             String?  @map("reason_for_leaving")
-  whyWorkHere                  String   @map("why_work_here")
-  resumeFilename               String?  @map("resume_filename")
-  resumeUrl                    String?  @map("resume_url")
-  resumeKey                    String?  @map("resume_key")
-  status                       String   @default("New")
-  notes                        String   @default("")
-  createdAt                    DateTime @default(now()) @map("created_at")
-  updatedAt                    DateTime @updatedAt @map("updated_at")
+  employmentType             String    @map("employment_type")
+  authorizedToWork           Boolean   @map("authorized_to_work")
+  over18                     Boolean   @map("over_18")
+  customerServiceExperience  Boolean   @map("customer_service_experience")
+  upsPrintShippingExperience Boolean   @map("ups_print_shipping_experience")
+  availableStartDate         DateTime  @map("available_start_date") @db.Date
+  availabilityJson           Json      @map("availability_json")
+  previousEmployer           String?   @map("previous_employer")
+  previousJobTitle           String?   @map("previous_job_title")
+  previousStartDate          DateTime? @map("previous_start_date") @db.Date
+  previousEndDate            DateTime? @map("previous_end_date") @db.Date
+  reasonForLeaving           String?   @map("reason_for_leaving")
+  whyWorkHere                String    @map("why_work_here")
+  resumeFilename             String?   @map("resume_filename")
+  resumeUrl                  String?   @map("resume_url")
+  resumeKey                  String?   @map("resume_key")
+  status                     String    @default("New")
+  notes                      String    @default("")
+  createdAt                  DateTime  @default(now()) @map("created_at")
+  updatedAt                  DateTime  @updatedAt @map("updated_at")
 
-  company      Company       @relation(fields: [companyId], references: [id])
-  job          Job?          @relation(fields: [jobId], references: [id])
+  company        Company         @relation(fields: [companyId], references: [id])
+  job            Job?            @relation(fields: [jobId], references: [id])
   applicantNotes ApplicantNote[]
-  interviews   Interview[]
-  activities   ActivityLog[]
+  interviews     Interview[]
+  activities     ActivityLog[]
 
   @@index([companyId, status])
   @@index([companyId, position])
@@ -182,36 +193,37 @@ model Applicant {
 
 model ApplicantNote {
   id          Int      @id @default(autoincrement())
-  companyId   Int      @default(1) @map("company_id")
+  companyId   Int      @map("company_id")
   applicantId Int      @map("applicant_id")
   adminId     Int      @map("admin_id")
   content     String   @db.Text
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  company     Company  @relation(fields: [companyId], references: [id])
-  applicant   Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
-  admin       Admin    @relation(fields: [adminId], references: [id])
+  company   Company   @relation(fields: [companyId], references: [id])
+  applicant Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  admin     Admin     @relation(fields: [adminId], references: [id])
 
   @@index([applicantId])
+  @@index([companyId])
   @@map("applicant_notes")
 }
 
 model Interview {
   id          Int      @id @default(autoincrement())
-  companyId   Int      @default(1) @map("company_id")
+  companyId   Int      @map("company_id")
   applicantId Int      @map("applicant_id")
   adminId     Int      @map("admin_id")
   scheduledAt DateTime @map("scheduled_at")
   notes       String?  @db.Text
   meetLink    String?  @map("meet_link")
-  status      String   @default("Scheduled") // Scheduled, Completed, Cancelled
+  status      String   @default("Scheduled")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  company     Company  @relation(fields: [companyId], references: [id])
-  applicant   Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
-  admin       Admin    @relation(fields: [adminId], references: [id])
+  company   Company   @relation(fields: [companyId], references: [id])
+  applicant Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  admin     Admin     @relation(fields: [adminId], references: [id])
 
   @@index([companyId, scheduledAt])
   @@index([applicantId])
@@ -220,16 +232,16 @@ model Interview {
 
 model ActivityLog {
   id          Int      @id @default(autoincrement())
-  companyId   Int      @default(1) @map("company_id")
+  companyId   Int      @map("company_id")
   applicantId Int?     @map("applicant_id")
   adminId     Int?     @map("admin_id")
   action      String
   details     String?
   createdAt   DateTime @default(now()) @map("created_at")
 
-  company     Company   @relation(fields: [companyId], references: [id])
-  applicant   Applicant? @relation(fields: [applicantId], references: [id], onDelete: SetNull)
-  admin       Admin?    @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  company   Company    @relation(fields: [companyId], references: [id])
+  applicant Applicant? @relation(fields: [applicantId], references: [id], onDelete: SetNull)
+  admin     Admin?     @relation(fields: [adminId], references: [id], onDelete: SetNull)
 
   @@index([companyId, createdAt(sort: Desc)])
   @@map("activity_logs")

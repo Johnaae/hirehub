@@ -1,4 +1,5 @@
 import { SignJWT, jwtVerify } from 'jose';
+import type { AdminRole } from './tenant';
 
 const COOKIE_NAME = 'admin_token';
 
@@ -11,10 +12,19 @@ function getSecret() {
 export interface AdminSession {
   id: number;
   email: string;
+  companyId: number;
+  role: AdminRole;
+  impersonateCompanyId?: number | null;
 }
 
 export async function signAdminToken(admin: AdminSession) {
-  return new SignJWT({ id: admin.id, email: admin.email })
+  return new SignJWT({
+    id: admin.id,
+    email: admin.email,
+    companyId: admin.companyId,
+    role: admin.role,
+    impersonateCompanyId: admin.impersonateCompanyId ?? null,
+  })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('7d')
@@ -25,7 +35,19 @@ export async function verifyAdminToken(token: string): Promise<AdminSession | nu
   try {
     const { payload } = await jwtVerify(token, getSecret());
     if (typeof payload.id !== 'number' || typeof payload.email !== 'string') return null;
-    return { id: payload.id, email: payload.email };
+    if (typeof payload.companyId !== 'number' || typeof payload.role !== 'string') return null;
+
+    const role = payload.role as AdminRole;
+    if (!['SUPER_ADMIN', 'OWNER', 'MANAGER'].includes(role)) return null;
+
+    return {
+      id: payload.id,
+      email: payload.email,
+      companyId: payload.companyId,
+      role,
+      impersonateCompanyId:
+        typeof payload.impersonateCompanyId === 'number' ? payload.impersonateCompanyId : null,
+    };
   } catch {
     return null;
   }

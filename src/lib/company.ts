@@ -9,6 +9,13 @@ export async function getDefaultCompany() {
   });
 }
 
+export async function getCompanyBySlug(slug: string) {
+  return prisma.company.findUnique({
+    where: { slug },
+    include: { settings: true },
+  });
+}
+
 export function slugify(text: string): string {
   return text
     .toLowerCase()

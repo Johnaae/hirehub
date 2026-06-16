@@ -4,7 +4,33 @@ import { applicationSchema, parseDateForDb } from '@/lib/validation';
 import { sendNewApplicationEmail, sendApplicationReceivedEmail } from '@/lib/email';
 import { logActivity } from '@/lib/activity';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
-import { DEFAULT_COMPANY_ID } from '@/lib/company';
+import { DEFAULT_COMPANY_ID, getCompanyBySlug } from '@/lib/company';
+
+async function resolveCompanyId(
+  jobId: number | null,
+  companySlug: string | undefined
+): Promise<{ companyId: number } | { error: NextResponse }> {
+  if (jobId && !isNaN(jobId)) {
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+      select: { companyId: true },
+    });
+    if (!job) {
+      return { error: NextResponse.json({ error: 'Job not found' }, { status: 404 }) };
+    }
+    return { companyId: job.companyId };
+  }
+
+  if (companySlug) {
+    const company = await getCompanyBySlug(companySlug);
+    if (!company) {
+      return { error: NextResponse.json({ error: 'Company not found' }, { status: 404 }) };
+    }
+    return { companyId: company.id };
+  }
+
+  return { companyId: DEFAULT_COMPANY_ID };
+}
 
 export async function POST(request: NextRequest) {
   const rl = rateLimit(`apply:${getClientIp(request)}`, 10, 3600_000);
@@ -61,9 +87,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const resolved = await resolveCompanyId(jobId, body.companySlug);
+    if ('error' in resolved) return resolved.error;
+    const { companyId } = resolved;
+
+    if (jobId && !isNaN(jobId)) {
+      const job = await prisma.job.findFirst({
+        where: { id: jobId, companyId },
+      });
+      if (!job) {
+        return NextResponse.json({ error: 'Job not found for this company' }, { status: 400 });
+      }
+    }
+
     const applicant = await prisma.applicant.create({
       data: {
-        companyId: DEFAULT_COMPANY_ID,
+        companyId,
         jobId: jobId && !isNaN(jobId) ? jobId : null,
         firstName: data.firstName,
         lastName: data.lastName,
@@ -99,6 +138,7 @@ export async function POST(request: NextRequest) {
       action: 'New Application',
       details: `${applicant.firstName} ${applicant.lastName} applied for ${applicant.position}`,
       applicantId: applicant.id,
+      companyId,
     }).catch(console.error);
 
     return NextResponse.json(

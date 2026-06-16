@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
-import { DEFAULT_COMPANY_ID } from '@/lib/company';
+import { requireActiveTenant } from '@/lib/auth';
+import { tenantWhere } from '@/lib/tenant';
 import { LOOKUP_CATEGORIES } from '@/lib/jobs';
 import { z } from 'zod';
 
 export async function GET() {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  const auth = await requireActiveTenant();
+  if ('error' in auth) return auth.error;
+  const { companyId } = auth;
 
   const options = await prisma.jobLookupOption.findMany({
-    where: { companyId: DEFAULT_COMPANY_ID },
+    where: tenantWhere(companyId),
     orderBy: [{ category: 'asc' }, { sortOrder: 'asc' }],
   });
 
@@ -30,8 +31,9 @@ const addSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  const auth = await requireActiveTenant();
+  if ('error' in auth) return auth.error;
+  const { companyId } = auth;
 
   const body = await request.json();
   const parsed = addSchema.safeParse(body);
@@ -42,14 +44,14 @@ export async function POST(request: NextRequest) {
   const { category, value } = parsed.data;
 
   const existing = await prisma.jobLookupOption.findUnique({
-    where: { companyId_category_value: { companyId: DEFAULT_COMPANY_ID, category, value } },
+    where: { companyId_category_value: { companyId, category, value } },
   });
   if (existing) return NextResponse.json({ option: existing });
 
-  const count = await prisma.jobLookupOption.count({ where: { companyId: DEFAULT_COMPANY_ID, category } });
+  const count = await prisma.jobLookupOption.count({ where: tenantWhere(companyId, { category }) });
 
   const option = await prisma.jobLookupOption.create({
-    data: { companyId: DEFAULT_COMPANY_ID, category, value, sortOrder: count },
+    data: { companyId, category, value, sortOrder: count },
   });
 
   return NextResponse.json({ option }, { status: 201 });
