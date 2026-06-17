@@ -204,60 +204,21 @@ export default function LoginPageClient() {
         }}
       />
 
-      {/* Left — Marketing */}
-      <aside className="business-login-marketing" aria-hidden="false">
-        <div className="business-login-blob business-login-blob--1" />
-        <div className="business-login-blob business-login-blob--2" />
-        <div className="business-login-blob business-login-blob--3" />
-
-        <div className="business-login-marketing-inner">
-          <HireHubLogo size="lg" variant="light" href="/" />
-
-          <h1 className="business-login-headline">Hiring made simple.</h1>
-          <p className="business-login-subtitle">
-            Create beautiful career pages, manage applicants, schedule interviews and hire faster.
-          </p>
-
-          <div className="business-login-features">
-            {FEATURES.map(({ icon: Icon, title, description }) => (
-              <div key={title} className="business-login-feature">
-                <div className="business-login-feature-icon">
-                  <Icon size={20} strokeWidth={2} />
-                </div>
-                <div className="business-login-feature-text">
-                  <strong>
-                    <Check size={14} style={{ display: 'inline', marginRight: 4, verticalAlign: -2 }} />
-                    {title}
-                  </strong>
-                  <span>{description}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="business-login-trusted">
-          <p className="business-login-trusted-label">Trusted by local businesses</p>
-          <div className="business-login-trusted-logos">
-            {TRUSTED_PLACEHOLDERS.map((name) => (
-              <span key={name} className="business-login-trusted-logo">{name}</span>
-            ))}
-          </div>
-        </div>
-      </aside>
-
-      {/* Right — Login card */}
+      {/* Left — Login */}
       <main className="business-login-main">
-        <button
-          type="button"
-          className="business-login-theme-toggle"
-          onClick={toggleTheme}
-          aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
-        >
-          {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
-        </button>
+        <div className="business-login-main-inner">
+          <div className="business-login-toolbar">
+            <button
+              type="button"
+              className="business-login-theme-toggle"
+              onClick={toggleTheme}
+              aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+            >
+              {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+            </button>
+          </div>
 
-        <div className="business-login-card">
+          <div className="business-login-card">
           <div className="business-login-card-header">
             <HireHubLogo size="lg" variant="dark" />
             <h2 className="business-login-card-title">Business Login</h2>
@@ -377,8 +338,51 @@ export default function LoginPageClient() {
               Back to Home
             </Link>
           </div>
+          </div>
         </div>
       </main>
+
+      {/* Right — Marketing */}
+      <aside className="business-login-marketing" aria-label="HireHub features">
+        <div className="business-login-blob business-login-blob--1" aria-hidden="true" />
+        <div className="business-login-blob business-login-blob--2" aria-hidden="true" />
+        <div className="business-login-blob business-login-blob--3" aria-hidden="true" />
+
+        <div className="business-login-marketing-content">
+          <HireHubLogo size="lg" variant="light" href="/" />
+
+          <h1 className="business-login-headline">Hiring made simple.</h1>
+          <p className="business-login-subtitle">
+            Create beautiful career pages, manage applicants, schedule interviews and hire faster.
+          </p>
+
+          <div className="business-login-features">
+            {FEATURES.map(({ icon: Icon, title, description }) => (
+              <div key={title} className="business-login-feature">
+                <div className="business-login-feature-icon">
+                  <Icon size={20} strokeWidth={2} />
+                </div>
+                <div className="business-login-feature-text">
+                  <strong>
+                    <Check size={14} style={{ display: 'inline', marginRight: 4, verticalAlign: -2 }} />
+                    {title}
+                  </strong>
+                  <span>{description}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="business-login-trusted">
+            <p className="business-login-trusted-label">Trusted by local businesses</p>
+            <div className="business-login-trusted-logos">
+              {TRUSTED_PLACEHOLDERS.map((name) => (
+                <span key={name} className="business-login-trusted-logo">{name}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </aside>
     </div>
   );
 }
