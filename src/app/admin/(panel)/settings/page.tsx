@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Save, Building2, Palette, Mail, ShieldCheck, Copy, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import AccountSecuritySection from '@/components/admin/settings/AccountSecuritySection';
+import { COMPANY_INDUSTRIES, INDUSTRY_LABELS, type CompanyIndustry } from '@/lib/industry';
 
 type SettingsTab = 'company' | 'branding' | 'email' | 'account';
 
@@ -20,7 +21,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    name: '', slug: '', address: '', phone: '', email: '', website: '', description: '',
+    name: '', slug: '', industry: 'SHIPPING_RETAIL' as CompanyIndustry, address: '', phone: '', email: '', website: '', description: '',
     careerPageBanner: '',
     logoUrl: '', primaryColor: '#351C15', accentColor: '#FFB500',
     settings: {
@@ -46,6 +47,7 @@ export default function SettingsPage() {
           setForm({
             name: d.company.name || '',
             slug: d.company.slug || '',
+            industry: d.company.industry || 'SHIPPING_RETAIL',
             address: d.company.address || '',
             phone: d.company.phone || '',
             email: d.company.email || '',
@@ -127,6 +129,18 @@ export default function SettingsPage() {
               <div className="saas-form-group">
                 <label>Store Name</label>
                 <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              </div>
+              <div className="saas-form-group">
+                <label>Industry</label>
+                <select
+                  value={form.industry}
+                  onChange={(e) => setForm({ ...form, industry: e.target.value as CompanyIndustry })}
+                >
+                  {COMPANY_INDUSTRIES.map((ind) => (
+                    <option key={ind} value={ind}>{INDUSTRY_LABELS[ind]}</option>
+                  ))}
+                </select>
+                <span className="field-hint">Job templates shown when creating positions are based on your industry</span>
               </div>
               <div className="saas-form-group">
                 <label>Public URL Slug</label>

@@ -54,6 +54,13 @@ export default function JobsPage() {
       });
   }, [search, statusFilter, deptFilter]);
 
+  const loadTemplates = () =>
+    fetch('/api/admin/jobs/templates')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.templates) setTemplates(d.templates);
+      });
+
   const loadMeta = () =>
     Promise.all([
       fetch('/api/admin/jobs/lookups').then((r) => r.json()),
@@ -77,6 +84,7 @@ export default function JobsPage() {
   const openCreate = () => {
     setEditingId(null);
     setFormInitial({});
+    loadTemplates();
     setShowForm(true);
   };
 

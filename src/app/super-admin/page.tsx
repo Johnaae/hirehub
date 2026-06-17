@@ -6,11 +6,13 @@ import { useRouter } from 'next/navigation';
 import { Building2, Users, Briefcase, Plus, Eye, Ban, Trash2, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 import PasswordInput from '@/components/PasswordInput';
+import { COMPANY_INDUSTRIES, INDUSTRY_LABELS, type CompanyIndustry } from '@/lib/industry';
 
 interface CompanyRow {
   id: number;
   name: string;
   slug: string;
+  industry: string;
   status: string;
   subscriptionStatus: string;
   createdAt: string;
@@ -26,6 +28,7 @@ export default function SuperAdminPage() {
   const [creating, setCreating] = useState(false);
   const [wizard, setWizard] = useState({
     name: '', ownerName: '', ownerEmail: '', temporaryPassword: '',
+    industry: 'RETAIL' as CompanyIndustry,
     logoUrl: '', primaryColor: '#351C15', accentColor: '#FFB500', timezone: 'America/New_York',
   });
 
@@ -50,7 +53,7 @@ export default function SuperAdminPage() {
     if (res.ok) {
       toast.success(`Company "${data.company.name}" created`);
       setShowWizard(false);
-      setWizard({ name: '', ownerName: '', ownerEmail: '', temporaryPassword: '', logoUrl: '', primaryColor: '#351C15', accentColor: '#FFB500', timezone: 'America/New_York' });
+      setWizard({ name: '', ownerName: '', ownerEmail: '', temporaryPassword: '', industry: 'RETAIL', logoUrl: '', primaryColor: '#351C15', accentColor: '#FFB500', timezone: 'America/New_York' });
       load();
     } else {
       toast.error(data.error || 'Failed to create company');
@@ -137,8 +140,20 @@ export default function SuperAdminPage() {
             <form onSubmit={handleCreate}>
               <div className="saas-form-row">
                 <div className="saas-form-group"><label>Company Name *</label><input required value={wizard.name} onChange={(e) => setWizard({ ...wizard, name: e.target.value })} /></div>
-                <div className="saas-form-group"><label>Timezone</label><input value={wizard.timezone} onChange={(e) => setWizard({ ...wizard, timezone: e.target.value })} /></div>
+                <div className="saas-form-group">
+                  <label>Industry *</label>
+                  <select
+                    required
+                    value={wizard.industry}
+                    onChange={(e) => setWizard({ ...wizard, industry: e.target.value as CompanyIndustry })}
+                  >
+                    {COMPANY_INDUSTRIES.map((ind) => (
+                      <option key={ind} value={ind}>{INDUSTRY_LABELS[ind]}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
+              <div className="saas-form-group"><label>Timezone</label><input value={wizard.timezone} onChange={(e) => setWizard({ ...wizard, timezone: e.target.value })} /></div>
               <div className="saas-form-row">
                 <div className="saas-form-group"><label>Owner Name *</label><input required value={wizard.ownerName} onChange={(e) => setWizard({ ...wizard, ownerName: e.target.value })} /></div>
                 <div className="saas-form-group"><label>Owner Email *</label><input type="email" required value={wizard.ownerEmail} onChange={(e) => setWizard({ ...wizard, ownerEmail: e.target.value })} /></div>
@@ -176,6 +191,7 @@ export default function SuperAdminPage() {
             <thead>
               <tr>
                 <th>Company</th>
+                <th>Industry</th>
                 <th>Status</th>
                 <th>Subscription</th>
                 <th>Applicants</th>
@@ -191,6 +207,7 @@ export default function SuperAdminPage() {
                     <strong>{c.name}</strong>
                     <div className="field-hint">{c.slug}</div>
                   </td>
+                  <td>{INDUSTRY_LABELS[c.industry as CompanyIndustry] || c.industry}</td>
                   <td><span className={`ats-status-badge ${c.status === 'active' ? 'open' : 'closed'}`}>{c.status}</span></td>
                   <td>{c.subscriptionStatus}</td>
                   <td>{c.stats.applicants}</td>

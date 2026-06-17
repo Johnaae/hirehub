@@ -1,7 +1,9 @@
 import prisma from './prisma';
 import { slugify } from './company';
 import { hashPassword } from './auth';
-import { ensureJobLookups, ensureJobTemplates } from './job-seed';
+import { ensureJobLookups } from './job-seed';
+import type { CompanyIndustry } from './industry';
+import { isValidIndustry } from './industry';
 import type { AdminRole } from './tenant';
 
 export interface CreateCompanyInput {
@@ -9,6 +11,7 @@ export interface CreateCompanyInput {
   ownerName: string;
   ownerEmail: string;
   temporaryPassword: string;
+  industry: CompanyIndustry;
   logoUrl?: string | null;
   primaryColor?: string;
   accentColor?: string;
@@ -27,11 +30,13 @@ export async function createCompanyWithOwner(input: CreateCompanyInput) {
   if (existingEmail) throw new Error('Owner email already in use');
 
   const passwordHash = await hashPassword(input.temporaryPassword);
+  const industry = isValidIndustry(input.industry) ? input.industry : 'CUSTOM';
 
   const company = await prisma.company.create({
     data: {
       name: input.name,
       slug,
+      industry,
       logoUrl: input.logoUrl || null,
       primaryColor: input.primaryColor || '#351C15',
       accentColor: input.accentColor || '#FFB500',
@@ -60,7 +65,6 @@ export async function createCompanyWithOwner(input: CreateCompanyInput) {
   });
 
   await ensureJobLookups(company.id);
-  await ensureJobTemplates(company.id);
 
   return company;
 }

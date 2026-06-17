@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma';
 import { requireActiveTenant } from '@/lib/auth';
 import { notFound } from '@/lib/tenant';
 import { slugify } from '@/lib/company';
+import { isValidIndustry } from '@/lib/industry';
 
 export async function GET() {
   const auth = await requireActiveTenant();
@@ -41,6 +42,13 @@ export async function PATCH(request: Request) {
     footer: body.footer,
     socialLinks: body.socialLinks,
   };
+
+  if (body.industry !== undefined) {
+    if (!isValidIndustry(body.industry)) {
+      return NextResponse.json({ error: 'Invalid industry' }, { status: 400 });
+    }
+    updateData.industry = body.industry;
+  }
 
   if (body.slug) {
     const newSlug = slugify(body.slug);

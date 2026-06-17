@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { requireActiveTenant } from '@/lib/auth';
-import { tenantWhere } from '@/lib/tenant';
 import { z } from 'zod';
 
 const templateSchema = z.object({
@@ -9,8 +8,8 @@ const templateSchema = z.object({
   title: z.string().min(1),
   department: z.string().optional().nullable(),
   employmentType: z.string().min(1),
-  salary: z.string().optional().nullable(),
-  location: z.string().optional().nullable(),
+  salaryRange: z.string().optional().nullable(),
+  locationType: z.string().optional().nullable(),
   description: z.string().min(1),
   requirements: z.string().optional().nullable(),
   benefits: z.string().optional().nullable(),
@@ -21,12 +20,32 @@ export async function GET() {
   if ('error' in auth) return auth.error;
   const { companyId } = auth;
 
+  const company = await prisma.company.findUnique({
+    where: { id: companyId },
+    select: { industry: true },
+  });
+  if (!company) {
+    return NextResponse.json({ error: 'Company not found' }, { status: 404 });
+  }
+
   const templates = await prisma.jobTemplate.findMany({
-    where: tenantWhere(companyId),
-    orderBy: [{ isSystem: 'desc' }, { name: 'asc' }],
+    where: {
+      OR: [
+        {
+          isSystemTemplate: true,
+          companyId: null,
+          industry: company.industry,
+        },
+        {
+          isSystemTemplate: false,
+          companyId,
+        },
+      ],
+    },
+    orderBy: [{ isSystemTemplate: 'desc' }, { name: 'asc' }],
   });
 
-  return NextResponse.json({ templates });
+  return NextResponse.json({ templates, industry: company.industry });
 }
 
 export async function POST(request: NextRequest) {
@@ -42,8 +61,8 @@ export async function POST(request: NextRequest) {
 
   const data = parsed.data;
 
-  const existing = await prisma.jobTemplate.findUnique({
-    where: { companyId_name: { companyId, name: data.name } },
+  const existing = await prisma.jobTemplate.findFirst({
+    where: { companyId, name: data.name, isSystemTemplate: false },
   });
   if (existing) {
     return NextResponse.json({ error: 'A template with this name already exists' }, { status: 409 });
@@ -52,7 +71,7 @@ export async function POST(request: NextRequest) {
   const template = await prisma.jobTemplate.create({
     data: {
       companyId,
-      isSystem: false,
+      isSystemTemplate: false,
       ...data,
     },
   });

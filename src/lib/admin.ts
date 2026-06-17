@@ -19,6 +19,7 @@ export async function ensureDefaultCompany() {
         accentColor: process.env.ACCENT_COLOR || '#FFB500',
         status: 'active',
         subscriptionStatus: 'active',
+        industry: 'SHIPPING_RETAIL',
         settings: {
           create: {
             ownerEmail: process.env.OWNER_EMAIL || null,
@@ -37,6 +38,7 @@ export async function ensureDefaultCompany() {
       data: {
         status: existing.status || 'active',
         subscriptionStatus: existing.subscriptionStatus || 'active',
+        industry: existing.industry || 'SHIPPING_RETAIL',
         ownerEmail: existing.ownerEmail || process.env.OWNER_EMAIL || existing.email,
       },
     });

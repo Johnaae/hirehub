@@ -23,6 +23,7 @@ model Company {
   accentColor        String   @default("#FFB500") @map("accent_color")
   status             String   @default("active") // active, suspended
   subscriptionStatus String   @default("trial") @map("subscription_status")
+  industry           String   @default("SHIPPING_RETAIL")
   careerPageBanner   String?  @map("career_page_banner") @db.Text
   footer             String?  @db.Text
   socialLinks        Json?    @map("social_links")
@@ -40,6 +41,7 @@ model Company {
   settings     CompanySettings?
 
   @@index([status])
+  @@index([industry])
   @@map("companies")
 }
 
@@ -123,24 +125,28 @@ model JobLookupOption {
 }
 
 model JobTemplate {
-  id             Int      @id @default(autoincrement())
-  companyId      Int      @map("company_id")
-  name           String
-  title          String
-  department     String?
-  employmentType String   @map("employment_type")
-  salary         String?
-  location       String?
-  description    String   @db.Text
-  requirements   String?  @db.Text
-  benefits       String?  @db.Text
-  isSystem       Boolean  @default(false) @map("is_system")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  id               Int      @id @default(autoincrement())
+  companyId        Int?     @map("company_id")
+  industry         String?
+  name             String
+  title            String
+  department       String?
+  employmentType   String   @map("employment_type")
+  salaryRange      String?  @map("salary_range")
+  locationType     String?  @map("location_type")
+  description      String   @db.Text
+  requirements     String?  @db.Text
+  benefits         String?  @db.Text
+  isSystemTemplate Boolean  @default(false) @map("is_system_template")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
 
-  company Company @relation(fields: [companyId], references: [id])
+  company Company? @relation(fields: [companyId], references: [id])
 
   @@unique([companyId, name])
+  @@unique([industry, title])
+  @@index([industry])
+  @@index([companyId])
   @@map("job_templates")
 }
 

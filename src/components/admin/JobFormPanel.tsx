@@ -13,12 +13,12 @@ export interface JobTemplate {
   title: string;
   department: string | null;
   employmentType: string;
-  salary: string | null;
-  location: string | null;
+  salaryRange: string | null;
+  locationType: string | null;
   description: string;
   requirements: string | null;
   benefits: string | null;
-  isSystem: boolean;
+  isSystemTemplate: boolean;
 }
 
 export interface JobLookups {
@@ -95,8 +95,8 @@ export default function JobFormPanel({
       title: t.title,
       department: t.department || '',
       employmentType: t.employmentType,
-      salary: t.salary || '',
-      location: t.location || 'On-site',
+      salary: t.salaryRange || '',
+      location: t.locationType || 'On-site',
       description: t.description,
       requirements: linesToArray(t.requirements),
       benefits: linesToArray(t.benefits),
@@ -163,8 +163,8 @@ export default function JobFormPanel({
         title: form.title,
         department: form.department || null,
         employmentType: form.employmentType,
-        salary: form.salary || null,
-        location: form.location || null,
+        salaryRange: form.salary || null,
+        locationType: form.location || null,
         description: form.description,
         requirements: arrayToLines(form.requirements) || null,
         benefits: arrayToLines(form.benefits) || null,
@@ -212,7 +212,7 @@ export default function JobFormPanel({
                   >
                     <FileText size={18} />
                     <span className="ats-template-name">{t.name}</span>
-                    {t.isSystem && <span className="ats-template-badge">System</span>}
+                    {t.isSystemTemplate && <span className="ats-template-badge">System</span>}
                   </button>
                 ))}
               </div>
