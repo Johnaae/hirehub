@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { clearCompanySession, clearLegacySession } from '@/lib/auth';
+import { clearSuperAdminSession, clearLegacySession } from '@/lib/auth';
 
 export async function POST() {
-  await clearCompanySession();
+  await clearSuperAdminSession();
   await clearLegacySession();
   return NextResponse.json({ message: 'Logged out successfully' });
 }

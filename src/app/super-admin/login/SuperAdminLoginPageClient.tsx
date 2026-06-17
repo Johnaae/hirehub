@@ -8,11 +8,10 @@ import PasswordInput from '@/components/PasswordInput';
 interface SessionInfo {
   loggedIn: boolean;
   email?: string;
-  role?: string;
   impersonating?: boolean;
 }
 
-export default function LoginPageClient() {
+export default function SuperAdminLoginPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
@@ -22,17 +21,17 @@ export default function LoginPageClient() {
   const [session, setSession] = useState<SessionInfo | null>(null);
   const [checkingSession, setCheckingSession] = useState(true);
 
-  const from = searchParams.get('from') || '/admin';
+  const from = searchParams.get('from') || '/super-admin';
 
   useEffect(() => {
-    fetch('/api/admin/session')
+    fetch('/api/super-admin/session')
       .then((r) => r.json())
       .then((d) => setSession(d))
       .finally(() => setCheckingSession(false));
   }, []);
 
   const handleLogoutAndContinue = async () => {
-    await fetch('/api/admin/logout', { method: 'POST' });
+    await fetch('/api/super-admin/logout', { method: 'POST' });
     setSession({ loggedIn: false });
   };
 
@@ -42,22 +41,13 @@ export default function LoginPageClient() {
     setSubmitting(true);
 
     try {
-      const response = await fetch('/api/admin/login', {
+      const response = await fetch('/api/super-admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
       const data = await response.json();
-      if (!response.ok) {
-        if (data.suspended) {
-          router.push('/suspended');
-          return;
-        }
-        if (data.superAdmin) {
-          throw new Error('Super Admin accounts must sign in at /super-admin/login');
-        }
-        throw new Error(data.error || 'Login failed');
-      }
+      if (!response.ok) throw new Error(data.error || 'Login failed');
       router.push(data.redirectTo || from);
       router.refresh();
     } catch (err) {
@@ -83,20 +73,19 @@ export default function LoginPageClient() {
         <div className="login-card card">
           <div className="login-header">
             <div className="hirehub-logo-mark logo-icon-lg">H</div>
-            <h1>Business Login</h1>
-            <p>HireHub — Company Owner & Manager</p>
+            <h1>Super Admin</h1>
+            <p>Platform administration</p>
           </div>
 
           {session?.loggedIn ? (
             <div className="login-already-in">
               <p>
-                You are already logged in as <strong>{session.email}</strong>
-                {session.impersonating && ' (impersonating)'}.
+                You are already logged in as <strong>{session.email}</strong>.
               </p>
               <div className="login-already-actions">
-                <Link href="/admin" className="btn btn-primary btn-block">Go to Dashboard</Link>
+                <Link href="/super-admin" className="btn btn-primary btn-block">Go to Super Admin</Link>
                 <button type="button" className="btn btn-outline btn-block" onClick={handleLogoutAndContinue}>
-                  Log in as different company
+                  Log in as different account
                 </button>
               </div>
             </div>
@@ -105,13 +94,13 @@ export default function LoginPageClient() {
               {error && <div className="alert alert-error">{error}</div>}
               <form onSubmit={handleSubmit}>
                 <div className="form-group">
-                  <label htmlFor="email">Email</label>
-                  <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+                  <label htmlFor="sa-email">Email</label>
+                  <input id="sa-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="password">Password</label>
+                  <label htmlFor="sa-password">Password</label>
                   <PasswordInput
-                    id="password"
+                    id="sa-password"
                     value={password}
                     onChange={setPassword}
                     required
@@ -126,7 +115,7 @@ export default function LoginPageClient() {
           )}
 
           <p className="login-super-admin-link">
-            <Link href="/super-admin/login">Super Admin Login</Link>
+            <Link href="/login">Company Owner Login</Link>
           </p>
 
           <Link href="/" className="login-back-link">&larr; Back to HireHub</Link>

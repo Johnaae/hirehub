@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireSuperAdmin } from '@/lib/tenant';
-import { setSession } from '@/lib/auth';
+import { setCompanySession, setSuperAdminSession, clearCompanySession } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 
@@ -22,8 +22,16 @@ export async function POST(request: NextRequest) {
   const company = await prisma.company.findUnique({ where: { id: parsed.data.companyId } });
   if (!company) return NextResponse.json({ error: 'Company not found' }, { status: 404 });
 
-  await setSession({
+  await setSuperAdminSession({
     ...session,
+    impersonateCompanyId: company.id,
+  });
+
+  await setCompanySession({
+    id: session.id,
+    email: session.email,
+    companyId: session.companyId,
+    role: 'SUPER_ADMIN',
     impersonateCompanyId: company.id,
   });
 
@@ -39,10 +47,12 @@ export async function DELETE() {
   if ('error' in auth) return auth.error;
   const { session } = auth;
 
-  await setSession({
+  await setSuperAdminSession({
     ...session,
     impersonateCompanyId: null,
   });
+
+  await clearCompanySession();
 
   return NextResponse.json({ message: 'Impersonation ended', redirectTo: '/super-admin' });
 }

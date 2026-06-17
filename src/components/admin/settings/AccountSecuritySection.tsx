@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import PasswordInput from '@/components/PasswordInput';
 
 interface AdminAccount {
   id: number;
@@ -110,7 +111,7 @@ export default function AccountSecuritySection() {
 
     if (res.ok) {
       toast.success(data.message || 'Login email updated');
-      router.push('/admin/login');
+      router.push('/login');
     } else {
       if (data.fieldErrors) setEmailErrors(data.fieldErrors);
       toast.error(data.error || 'Failed to update email');
@@ -133,7 +134,7 @@ export default function AccountSecuritySection() {
 
     if (res.ok) {
       toast.success(data.message || 'Password updated');
-      router.push('/admin/login');
+      router.push('/login');
     } else {
       if (data.fieldErrors) setPasswordErrors(data.fieldErrors);
       toast.error(data.error || 'Failed to update password');
@@ -224,10 +225,10 @@ export default function AccountSecuritySection() {
         <form onSubmit={handlePasswordSave}>
           <div className="saas-form-group">
             <label>Current Password</label>
-            <input
-              type="password"
+            <PasswordInput
+              id="current-password"
               value={passwords.currentPassword}
-              onChange={(e) => setPasswords({ ...passwords, currentPassword: e.target.value })}
+              onChange={(v) => setPasswords({ ...passwords, currentPassword: v })}
               autoComplete="current-password"
             />
             {passwordErrors.currentPassword && (
@@ -237,10 +238,10 @@ export default function AccountSecuritySection() {
           <div className="saas-form-row">
             <div className="saas-form-group">
               <label>New Password</label>
-              <input
-                type="password"
+              <PasswordInput
+                id="new-password"
                 value={passwords.newPassword}
-                onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
+                onChange={(v) => setPasswords({ ...passwords, newPassword: v })}
                 autoComplete="new-password"
                 minLength={8}
               />
@@ -251,10 +252,10 @@ export default function AccountSecuritySection() {
             </div>
             <div className="saas-form-group">
               <label>Confirm New Password</label>
-              <input
-                type="password"
+              <PasswordInput
+                id="confirm-password"
                 value={passwords.confirmPassword}
-                onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
+                onChange={(v) => setPasswords({ ...passwords, confirmPassword: v })}
                 autoComplete="new-password"
               />
               {passwordErrors.confirmPassword && (

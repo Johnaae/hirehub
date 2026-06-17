@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getSession, type AdminSession } from './auth';
+import { getCompanySession, getSuperAdminSession, type AdminSession } from './auth';
 
 export type AdminRole = 'SUPER_ADMIN' | 'OWNER' | 'MANAGER';
 
@@ -38,20 +38,25 @@ type AuthResult =
   | { error: NextResponse };
 
 export async function requireAdminSession(): Promise<AuthResult> {
-  const session = await getSession();
+  const session = await getCompanySession();
   if (!session) {
+    return { error: NextResponse.json({ error: 'Authentication required' }, { status: 401 }) };
+  }
+  if (session.role === 'SUPER_ADMIN' && !session.impersonateCompanyId) {
     return { error: NextResponse.json({ error: 'Authentication required' }, { status: 401 }) };
   }
   return { session, companyId: getEffectiveCompanyId(session) };
 }
 
-export async function requireSuperAdmin(): Promise<AuthResult> {
-  const result = await requireAdminSession();
-  if ('error' in result) return result;
-  if (!isSuperAdmin(result.session)) {
-    return { error: NextResponse.json({ error: 'Super admin access required' }, { status: 403 }) };
+export async function requireSuperAdmin(): Promise<
+  | { session: AdminSession }
+  | { error: NextResponse }
+> {
+  const session = await getSuperAdminSession();
+  if (!session) {
+    return { error: NextResponse.json({ error: 'Super admin authentication required' }, { status: 401 }) };
   }
-  return result;
+  return { session };
 }
 
 export async function requireOwner(): Promise<AuthResult> {

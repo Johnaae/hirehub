@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Building2, Users, Briefcase, Plus, Eye, Ban, Trash2, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
+import PasswordInput from '@/components/PasswordInput';
 
 interface CompanyRow {
   id: number;
@@ -93,8 +94,8 @@ export default function SuperAdminPage() {
   };
 
   const handleLogout = async () => {
-    await fetch('/api/admin/logout', { method: 'POST' });
-    router.push('/login');
+    await fetch('/api/super-admin/logout', { method: 'POST' });
+    router.push('/super-admin/login');
   };
 
   return (
@@ -142,7 +143,17 @@ export default function SuperAdminPage() {
                 <div className="saas-form-group"><label>Owner Name *</label><input required value={wizard.ownerName} onChange={(e) => setWizard({ ...wizard, ownerName: e.target.value })} /></div>
                 <div className="saas-form-group"><label>Owner Email *</label><input type="email" required value={wizard.ownerEmail} onChange={(e) => setWizard({ ...wizard, ownerEmail: e.target.value })} /></div>
               </div>
-              <div className="saas-form-group"><label>Temporary Password *</label><input type="password" required minLength={8} value={wizard.temporaryPassword} onChange={(e) => setWizard({ ...wizard, temporaryPassword: e.target.value })} /></div>
+              <div className="saas-form-group">
+                <label>Temporary Password *</label>
+                <PasswordInput
+                  id="wizard-temp-password"
+                  value={wizard.temporaryPassword}
+                  onChange={(v) => setWizard({ ...wizard, temporaryPassword: v })}
+                  required
+                  minLength={8}
+                  autoComplete="new-password"
+                />
+              </div>
               <div className="saas-form-row">
                 <div className="saas-form-group"><label>Primary Color</label><input type="color" value={wizard.primaryColor} onChange={(e) => setWizard({ ...wizard, primaryColor: e.target.value })} /></div>
                 <div className="saas-form-group"><label>Accent Color</label><input type="color" value={wizard.accentColor} onChange={(e) => setWizard({ ...wizard, accentColor: e.target.value })} /></div>

@@ -1,7 +1,10 @@
 import { SignJWT, jwtVerify } from 'jose';
 import type { AdminRole } from './tenant';
 
-const COOKIE_NAME = 'admin_token';
+export const COMPANY_SESSION_COOKIE = 'company_session';
+export const SUPER_ADMIN_SESSION_COOKIE = 'super_admin_session';
+/** @deprecated legacy single cookie — cleared on login */
+export const LEGACY_SESSION_COOKIE = 'admin_token';
 
 function getSecret() {
   const secret = process.env.JWT_SECRET;
@@ -53,9 +56,9 @@ export async function verifyAdminToken(token: string): Promise<AdminSession | nu
   }
 }
 
-export function getAuthCookieOptions() {
+function baseCookieOptions(name: string) {
   return {
-    name: COOKIE_NAME,
+    name,
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax' as const,
@@ -64,4 +67,18 @@ export function getAuthCookieOptions() {
   };
 }
 
-export { COOKIE_NAME };
+export function getCompanyCookieOptions() {
+  return baseCookieOptions(COMPANY_SESSION_COOKIE);
+}
+
+export function getSuperAdminCookieOptions() {
+  return baseCookieOptions(SUPER_ADMIN_SESSION_COOKIE);
+}
+
+/** @deprecated use getCompanyCookieOptions */
+export function getAuthCookieOptions() {
+  return getCompanyCookieOptions();
+}
+
+/** @deprecated use COMPANY_SESSION_COOKIE */
+export const COOKIE_NAME = COMPANY_SESSION_COOKIE;

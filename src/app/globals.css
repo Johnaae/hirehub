@@ -1000,3 +1000,78 @@ img {
 .hirehub-footer { background: #fff; border-top: 1px solid var(--gray-200); }
 .public-header-logo { max-height: 40px; }
 .logo-text-only { font-weight: 700; font-size: 1.1rem; }
+
+/* Password visibility toggle */
+.password-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-wrap input {
+  width: 100%;
+  padding: 0.625rem 2.75rem 0.625rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--gray-500);
+  display: flex;
+  align-items: center;
+  padding: 0.25rem;
+}
+
+.password-toggle-btn:hover { color: var(--gray-700); }
+
+.login-already-in {
+  text-align: center;
+  padding: 0.5rem 0 1rem;
+}
+
+.login-already-in p {
+  color: var(--gray-600);
+  margin-bottom: 1.25rem;
+  line-height: 1.6;
+}
+
+.login-already-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.login-super-admin-link {
+  text-align: center;
+  margin-top: 1.25rem;
+  font-size: 0.85rem;
+}
+
+.login-super-admin-link a {
+  color: var(--gray-500);
+  text-decoration: none;
+}
+
+.login-super-admin-link a:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--gray-300);
+  color: var(--gray-700);
+}
+
+.btn-outline:hover {
+  background: var(--gray-100);
+}

@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import {
   verifyPassword,
-  setCompanySession,
+  setSuperAdminSession,
   clearLegacySession,
 } from '@/lib/auth';
 import { loginSchema } from '@/lib/validation';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
-  const rl = rateLimit(`login:${getClientIp(request)}`, 10, 900_000);
+  const rl = rateLimit(`super-login:${getClientIp(request)}`, 10, 900_000);
   if (!rl.ok) return rl.response;
 
   try {
@@ -23,22 +23,10 @@ export async function POST(request: NextRequest) {
     const { email, password } = parsed.data;
     const admin = await prisma.admin.findUnique({
       where: { email: email.toLowerCase() },
-      include: { company: { select: { id: true, name: true, slug: true, status: true } } },
     });
 
-    if (!admin || !(await verifyPassword(password, admin.passwordHash))) {
+    if (!admin || admin.role !== 'SUPER_ADMIN' || !(await verifyPassword(password, admin.passwordHash))) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
-    }
-
-    if (admin.role === 'SUPER_ADMIN') {
-      return NextResponse.json(
-        { error: 'Use Super Admin login at /super-admin/login', superAdmin: true },
-        { status: 403 }
-      );
-    }
-
-    if (admin.company.status === 'suspended') {
-      return NextResponse.json({ error: 'Your company account has been suspended', suspended: true }, { status: 403 });
     }
 
     await prisma.admin.update({
@@ -48,28 +36,21 @@ export async function POST(request: NextRequest) {
 
     await clearLegacySession();
 
-    await setCompanySession({
+    await setSuperAdminSession({
       id: admin.id,
       email: admin.email,
       companyId: admin.companyId,
-      role: admin.role as 'OWNER' | 'MANAGER',
+      role: 'SUPER_ADMIN',
       impersonateCompanyId: null,
     });
 
     return NextResponse.json({
       message: 'Login successful',
-      redirectTo: '/admin',
-      admin: {
-        id: admin.id,
-        email: admin.email,
-        name: admin.name,
-        role: admin.role,
-        companyId: admin.companyId,
-        company: admin.company,
-      },
+      redirectTo: '/super-admin',
+      admin: { id: admin.id, email: admin.email, name: admin.name },
     });
   } catch (err) {
-    console.error('Login error:', err);
+    console.error('Super admin login error:', err);
     return NextResponse.json({ error: 'Login failed' }, { status: 500 });
   }
 }
