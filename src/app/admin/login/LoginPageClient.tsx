@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Toaster, toast } from 'sonner';
 import LoginCard from '@/components/auth/LoginCard';
 import MarketingPanel from '@/components/auth/MarketingPanel';
-import '@/app/login-page.css';
 
 const REMEMBER_KEY = 'hirehub_remember_email';
 
@@ -149,33 +148,35 @@ export default function LoginPageClient() {
   }
 
   return (
-    <div className={`login-page${exiting ? ' login-page--exiting' : ''}`}>
+    <>
       <Toaster position="top-center" richColors closeButton />
 
-      <div className="login-left">
-        <LoginCard
-          session={session}
-          email={email}
-          password={password}
-          rememberMe={rememberMe}
-          emailError={emailError}
-          submitting={submitting}
-          onEmailChange={(v) => {
-            setEmail(v);
-            if (emailError) setEmailError('');
-          }}
-          onPasswordChange={setPassword}
-          onRememberMeChange={setRememberMe}
-          onEmailBlur={handleEmailBlur}
-          onForgotPassword={handleForgotPassword}
-          onSubmit={handleSubmit}
-          onLogoutAndContinue={handleLogoutAndContinue}
-        />
-      </div>
+      <div className={`login-page${exiting ? ' login-page--exiting' : ''}`}>
+        <div className="login-left">
+          <LoginCard
+            session={session}
+            email={email}
+            password={password}
+            rememberMe={rememberMe}
+            emailError={emailError}
+            submitting={submitting}
+            onEmailChange={(v) => {
+              setEmail(v);
+              if (emailError) setEmailError('');
+            }}
+            onPasswordChange={setPassword}
+            onRememberMeChange={setRememberMe}
+            onEmailBlur={handleEmailBlur}
+            onForgotPassword={handleForgotPassword}
+            onSubmit={handleSubmit}
+            onLogoutAndContinue={handleLogoutAndContinue}
+          />
+        </div>
 
-      <div className="login-right">
-        <MarketingPanel />
+        <div className="login-right">
+          <MarketingPanel />
+        </div>
       </div>
-    </div>
+    </>
   );
 }

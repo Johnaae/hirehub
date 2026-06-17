@@ -588,8 +588,8 @@ img {
   margin-bottom: 2rem;
 }
 
-/* Login */
-.login-page {
+/* Legacy centered login (super-admin, suspended) */
+.page.login-page {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
   min-height: 100vh;
   display: flex;
@@ -603,7 +603,7 @@ img {
   padding: 1.25rem;
 }
 
-.login-card {
+.page.login-page .login-card.card {
   padding: 2.5rem 2rem;
 }
 

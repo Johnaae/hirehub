@@ -1,6 +1,5 @@
 import { Suspense } from 'react';
 import LoginPageClient from '../admin/login/LoginPageClient';
-import '@/app/login-page.css';
 
 function LoginFallback() {
   return (
