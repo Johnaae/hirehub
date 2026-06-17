@@ -30,6 +30,7 @@ const STATUS_STYLES: Record<string, string> = {
 
 interface JobCardProps {
   job: JobCardData;
+  companySlug?: string;
   onEdit: (job: JobCardData) => void;
   onDuplicate: (id: number) => void;
   onArchive: (id: number) => void;
@@ -37,8 +38,10 @@ interface JobCardProps {
   onPublish: (id: number) => void;
 }
 
-export default function JobCard({ job, onEdit, onDuplicate, onArchive, onDelete, onPublish }: JobCardProps) {
+export default function JobCard({ job, companySlug, onEdit, onDuplicate, onArchive, onDelete, onPublish }: JobCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const publicApplyUrl = companySlug ? `/careers/${companySlug}/apply/${job.id}` : null;
 
   const fmt = (d?: string) =>
     d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
@@ -63,8 +66,8 @@ export default function JobCard({ job, onEdit, onDuplicate, onArchive, onDelete,
                 <button type="button" onClick={() => { onDuplicate(job.id); setMenuOpen(false); }}>
                   <Copy size={14} /> Duplicate
                 </button>
-                {job.status === 'Open' && (
-                  <Link href={`/jobs/${job.slug}`} target="_blank" onClick={() => setMenuOpen(false)}>
+                {job.status === 'Open' && publicApplyUrl && (
+                  <Link href={publicApplyUrl} target="_blank" onClick={() => setMenuOpen(false)}>
                     <ExternalLink size={14} /> View public page
                   </Link>
                 )}
@@ -105,8 +108,8 @@ export default function JobCard({ job, onEdit, onDuplicate, onArchive, onDelete,
         <button type="button" className="saas-btn saas-btn-outline saas-btn-sm" onClick={() => onEdit(job)}>
           Edit Job
         </button>
-        {job.status === 'Open' && (
-          <Link href={`/jobs/${job.slug}`} target="_blank" className="saas-btn saas-btn-ghost saas-btn-sm">
+        {job.status === 'Open' && publicApplyUrl && (
+          <Link href={publicApplyUrl} target="_blank" className="saas-btn saas-btn-ghost saas-btn-sm">
             View Listing
           </Link>
         )}

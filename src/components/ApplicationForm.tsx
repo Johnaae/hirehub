@@ -256,7 +256,7 @@ export default function ApplicationForm({
         return;
       }
 
-      router.push('/success');
+      router.push(companySlug ? `/success?company=${encodeURIComponent(companySlug)}` : '/success');
     } catch (err) {
       console.error('Application submit error:', err);
       setSubmitError(err instanceof Error ? err.message : 'Failed to submit application');

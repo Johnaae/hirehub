@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Save, Building2, Palette, Mail, ShieldCheck } from 'lucide-react';
+import Link from 'next/link';
+import { Save, Building2, Palette, Mail, ShieldCheck, Copy, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import AccountSecuritySection from '@/components/admin/settings/AccountSecuritySection';
 
@@ -19,12 +20,23 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    name: '', address: '', phone: '', email: '', description: '',
+    name: '', slug: '', address: '', phone: '', email: '', website: '', description: '',
+    careerPageBanner: '',
     logoUrl: '', primaryColor: '#351C15', accentColor: '#FFB500',
     settings: {
       smtpHost: '', smtpPort: '587', smtpUser: '', smtpPass: '', uploadProvider: 'uploadthing',
     },
   });
+
+  const careerUrl = form.slug
+    ? `${typeof window !== 'undefined' ? window.location.origin : ''}/careers/${form.slug}`
+    : '';
+
+  const copyCareerUrl = () => {
+    if (!careerUrl) return;
+    navigator.clipboard.writeText(careerUrl);
+    toast.success('Career page link copied');
+  };
 
   useEffect(() => {
     fetch('/api/admin/settings')
@@ -33,10 +45,13 @@ export default function SettingsPage() {
         if (d.company) {
           setForm({
             name: d.company.name || '',
+            slug: d.company.slug || '',
             address: d.company.address || '',
             phone: d.company.phone || '',
             email: d.company.email || '',
+            website: d.company.website || '',
             description: d.company.description || '',
+            careerPageBanner: d.company.careerPageBanner || '',
             logoUrl: d.company.logoUrl || '',
             primaryColor: d.company.primaryColor || '#351C15',
             accentColor: d.company.accentColor || '#FFB500',
@@ -114,6 +129,25 @@ export default function SettingsPage() {
                 <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
               </div>
               <div className="saas-form-group">
+                <label>Public URL Slug</label>
+                <input
+                  value={form.slug}
+                  onChange={(e) => setForm({ ...form, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
+                  placeholder="your-store-name"
+                />
+                <span className="field-hint">Used in your career page URL: /careers/{form.slug || 'your-slug'}</span>
+              </div>
+              {form.slug && (
+                <div className="career-url-copy">
+                  <ExternalLink size={16} />
+                  <code>{`/careers/${form.slug}`}</code>
+                  <button type="button" className="saas-btn saas-btn-sm saas-btn-outline" onClick={copyCareerUrl}>
+                    <Copy size={14} /> Copy link
+                  </button>
+                  <Link href={`/careers/${form.slug}`} target="_blank" className="saas-link">Preview</Link>
+                </div>
+              )}
+              <div className="saas-form-group">
                 <label>Address</label>
                 <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
               </div>
@@ -134,11 +168,12 @@ export default function SettingsPage() {
                 </div>
               </div>
               <div className="saas-form-group">
-                <label>Company Description</label>
+                <label>Hero Subtitle</label>
                 <textarea
                   rows={3}
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  placeholder="Brief description shown below the hero title on your careers page"
                 />
               </div>
             </div>
@@ -160,6 +195,15 @@ export default function SettingsPage() {
                   onChange={(e) => setForm({ ...form, logoUrl: e.target.value })}
                   placeholder="https://..."
                 />
+              </div>
+              <div className="saas-form-group">
+                <label>Hero Title</label>
+                <input
+                  value={form.careerPageBanner}
+                  onChange={(e) => setForm({ ...form, careerPageBanner: e.target.value })}
+                  placeholder={`Join ${form.name || 'Our Team'}`}
+                />
+                <span className="field-hint">Main headline on your public careers page</span>
               </div>
               <div className="saas-form-row">
                 <div className="saas-form-group">

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, notFound } from 'next/navigation';
 import { MapPin, Briefcase, ArrowLeft } from 'lucide-react';
 import ApplicationForm from '@/components/ApplicationForm';
 
@@ -26,25 +26,34 @@ interface CompanyConfig {
   accentColor: string;
 }
 
-export default function CareerJobApplyPage() {
-  const { slug, jobSlug } = useParams<{ slug: string; jobSlug: string }>();
+export default function CareerApplyPage() {
+  const { slug, jobId } = useParams<{ slug: string; jobId: string }>();
   const [job, setJob] = useState<Job | null>(null);
   const [company, setCompany] = useState<CompanyConfig | null>(null);
   const [loading, setLoading] = useState(true);
+  const [notFoundState, setNotFoundState] = useState(false);
 
   useEffect(() => {
-    if (!slug) return;
-    fetch(`/api/careers/${slug}`)
-      .then((r) => r.json())
+    if (!slug || !jobId) return;
+    fetch(`/api/careers/${slug}/jobs/${jobId}`)
+      .then((r) => {
+        if (r.status === 404) {
+          setNotFoundState(true);
+          return null;
+        }
+        return r.json();
+      })
       .then((d) => {
-        if (d.company) {
+        if (!d) return;
+        if (d.job && d.company) {
+          setJob(d.job);
           setCompany(d.company);
-          const found = (d.jobs || []).find((j: Job) => j.slug === jobSlug);
-          setJob(found || null);
+        } else {
+          setNotFoundState(true);
         }
       })
       .finally(() => setLoading(false));
-  }, [slug, jobSlug]);
+  }, [slug, jobId]);
 
   useEffect(() => {
     if (company) {
@@ -53,20 +62,24 @@ export default function CareerJobApplyPage() {
     }
   }, [company]);
 
-  if (loading) return <div className="page"><div className="container" style={{ padding: '4rem 0' }}>Loading...</div></div>;
-  if (!job || !company) return (
-    <div className="page">
-      <div className="container" style={{ padding: '4rem 0', textAlign: 'center' }}>
-        <h2>Job not found</h2>
-        <Link href={`/careers/${slug}`} className="btn btn-primary">View all jobs</Link>
+  if (loading) {
+    return (
+      <div className="page">
+        <div className="container" style={{ padding: '4rem 0' }}>Loading...</div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  if (notFoundState || !job || !company) {
+    notFound();
+  }
 
   return (
-    <div className="page">
+    <div className="page careers-page">
       <div className="container" style={{ padding: '2rem 0' }}>
-        <Link href={`/careers/${slug}`} className="saas-back-link"><ArrowLeft size={16} /> Back to {company.storeName} careers</Link>
+        <Link href={`/careers/${slug}`} className="saas-back-link">
+          <ArrowLeft size={16} /> Back to {company.storeName} careers
+        </Link>
         <div className="card" style={{ marginBottom: '2rem', padding: '1.5rem' }}>
           <h1 style={{ marginBottom: '0.5rem' }}>{job.title}</h1>
           <div className="public-job-meta">

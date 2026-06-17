@@ -2,64 +2,82 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, notFound } from 'next/navigation';
 import { MapPin, Briefcase, ArrowRight, Globe, Phone } from 'lucide-react';
 
-interface CareerData {
-  company: {
-    storeName: string;
-    storeAddress: string;
-    storePhone: string;
-    storeWebsite: string;
-    primaryColor: string;
-    accentColor: string;
-    description: string;
-    logoUrl: string;
-    footer: string;
-  };
-  jobs: Array<{
-    id: number;
-    title: string;
-    slug: string;
-    department: string | null;
-    employmentType: string;
-    location: string | null;
-    salary: string | null;
-    description: string;
-    openings: number;
-  }>;
+interface CareerCompany {
+  storeName: string;
+  storeAddress: string;
+  storePhone: string;
+  storeWebsite: string;
+  primaryColor: string;
+  accentColor: string;
+  heroTitle: string;
+  heroSubtitle: string;
+  logoUrl: string;
+  footer: string;
+  companySlug: string;
+}
+
+interface CareerJob {
+  id: number;
+  title: string;
+  slug: string;
+  department: string | null;
+  employmentType: string;
+  location: string | null;
+  salary: string | null;
+  description: string;
+  openings: number;
 }
 
 export default function CareersPage() {
   const { slug } = useParams<{ slug: string }>();
-  const [data, setData] = useState<CareerData | null>(null);
+  const [company, setCompany] = useState<CareerCompany | null>(null);
+  const [jobs, setJobs] = useState<CareerJob[]>([]);
   const [loading, setLoading] = useState(true);
+  const [notFoundState, setNotFoundState] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
     fetch(`/api/careers/${slug}`)
-      .then((r) => r.json())
-      .then((d) => setData(d.company ? d : null))
+      .then((r) => {
+        if (r.status === 404) {
+          setNotFoundState(true);
+          return null;
+        }
+        return r.json();
+      })
+      .then((d) => {
+        if (!d) return;
+        if (d.company) {
+          setCompany(d.company);
+          setJobs(d.jobs || []);
+        } else {
+          setNotFoundState(true);
+        }
+      })
       .finally(() => setLoading(false));
   }, [slug]);
 
   useEffect(() => {
-    if (data?.company) {
-      document.documentElement.style.setProperty('--primary', data.company.primaryColor);
-      document.documentElement.style.setProperty('--accent', data.company.accentColor);
+    if (company) {
+      document.documentElement.style.setProperty('--primary', company.primaryColor);
+      document.documentElement.style.setProperty('--accent', company.accentColor);
     }
-  }, [data]);
+  }, [company]);
 
-  if (loading) return <div className="page"><div className="container" style={{ padding: '4rem 0' }}>Loading careers...</div></div>;
-  if (!data) return (
-    <div className="page">
-      <div className="container" style={{ padding: '4rem 0', textAlign: 'center' }}>
-        <h2>Careers page not found</h2>
+  if (loading) {
+    return (
+      <div className="page">
+        <div className="container" style={{ padding: '4rem 0', textAlign: 'center' }}>Loading careers...</div>
       </div>
-    </div>
-  );
+    );
+  }
 
-  const { company, jobs } = data;
+  if (notFoundState || !company) {
+    notFound();
+  }
 
   return (
     <div className="page careers-page">
@@ -84,8 +102,8 @@ export default function CareersPage() {
         <div className="container">
           <div className="hero-content">
             <span className="hero-badge">Now Hiring</span>
-            <h1>Join {company.storeName}</h1>
-            <p className="hero-text">{company.description || 'Explore open positions and apply today.'}</p>
+            <h1>{company.heroTitle}</h1>
+            <p className="hero-text">{company.heroSubtitle}</p>
             {(company.storeAddress || company.storePhone) && (
               <div className="careers-contact">
                 {company.storeAddress && <span><MapPin size={14} /> {company.storeAddress}</span>}
@@ -98,9 +116,13 @@ export default function CareersPage() {
 
       <section className="section">
         <div className="container">
-          <h2 className="public-jobs-title">Open Positions ({jobs.length})</h2>
+          <h2 className="public-jobs-title">
+            Open Positions{jobs.length > 0 ? ` (${jobs.length})` : ''}
+          </h2>
           {jobs.length === 0 ? (
-            <div className="card public-empty-jobs"><p>No open positions at this time.</p></div>
+            <div className="card public-empty-jobs">
+              <p>No open positions at this time. Please check back soon.</p>
+            </div>
           ) : (
             <div className="public-jobs-grid">
               {jobs.map((job) => (
@@ -116,7 +138,7 @@ export default function CareersPage() {
                     </div>
                     <p className="public-job-desc">{job.description.slice(0, 160)}...</p>
                   </div>
-                  <Link href={`/careers/${slug}/jobs/${job.slug}`} className="btn btn-primary public-apply-btn">
+                  <Link href={`/careers/${slug}/apply/${job.id}`} className="btn btn-primary public-apply-btn">
                     Apply Now <ArrowRight size={16} />
                   </Link>
                 </div>

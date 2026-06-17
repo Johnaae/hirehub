@@ -4,15 +4,17 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import type { StoreConfig } from '@/lib/config';
 
 const defaultConfig: StoreConfig = {
-  companyId: 1,
-  companySlug: 'default',
-  storeName: 'The UPS Store Hiring Portal',
+  companyId: 0,
+  companySlug: '',
+  storeName: 'HireHub',
   storeAddress: '',
   storePhone: '',
   storeWebsite: '',
   ownerEmail: '',
-  primaryColor: '#351C15',
-  accentColor: '#FFB500',
+  primaryColor: '#1e3a5f',
+  accentColor: '#3b82f6',
+  heroTitle: 'Hiring portals for local businesses',
+  heroSubtitle: '',
   description: '',
   logoUrl: '',
   timezone: 'America/New_York',
@@ -40,15 +42,9 @@ export function ConfigProvider({
       applyTheme(initialConfig);
       return;
     }
-
-    fetch('/api/config')
-      .then((r) => r.json())
-      .then((data: StoreConfig) => {
-        setConfig(data);
-        applyTheme(data);
-      })
-      .catch(() => applyTheme(defaultConfig))
-      .finally(() => setLoading(false));
+    // Root pages use neutral HireHub branding — company pages apply their own theme
+    applyTheme(defaultConfig);
+    setLoading(false);
   }, [initialConfig]);
 
   return (

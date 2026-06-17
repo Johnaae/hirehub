@@ -30,10 +30,12 @@ const navItems = [
 export default function AdminSidebar({
   adminEmail,
   storeName,
+  companySlug,
   onSearch,
 }: {
   adminEmail?: string;
   storeName?: string;
+  companySlug?: string;
   onSearch?: (q: string) => void;
 }) {
   const pathname = usePathname();
@@ -41,6 +43,8 @@ export default function AdminSidebar({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dark, setDark] = useState(false);
   const [searchQ, setSearchQ] = useState('');
+
+  const publicSiteHref = companySlug ? `/careers/${companySlug}` : null;
 
   useEffect(() => {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -64,7 +68,7 @@ export default function AdminSidebar({
 
   const handleLogout = async () => {
     await fetch('/api/admin/logout', { method: 'POST' });
-    router.push('/admin/login');
+    router.push('/login');
     router.refresh();
   };
 
@@ -114,10 +118,17 @@ export default function AdminSidebar({
       </nav>
 
       <div className="saas-sidebar-footer">
-        <Link href="/" target="_blank" className="saas-nav-item">
-          <ExternalLink size={18} />
-          Public Site
-        </Link>
+        {publicSiteHref ? (
+          <Link href={publicSiteHref} target="_blank" className="saas-nav-item">
+            <ExternalLink size={18} />
+            Public Site
+          </Link>
+        ) : (
+          <span className="saas-nav-item disabled" title="Company slug not available">
+            <ExternalLink size={18} />
+            Public Site
+          </span>
+        )}
         <button type="button" className="saas-nav-item" onClick={toggleDark}>
           {dark ? <Sun size={18} /> : <Moon size={18} />}
           {dark ? 'Light Mode' : 'Dark Mode'}

@@ -7,6 +7,7 @@ import { Toaster, toast } from 'sonner';
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [adminEmail, setAdminEmail] = useState('');
   const [storeName, setStoreName] = useState('');
+  const [companySlug, setCompanySlug] = useState('');
   const [impersonating, setImpersonating] = useState<{ name: string; slug: string } | null>(null);
 
   useEffect(() => {
@@ -14,11 +15,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       .then((r) => r.json())
       .then((d) => {
         if (d.admin) setAdminEmail(d.admin.email || d.admin.name || '');
+        if (d.company?.slug) setCompanySlug(d.company.slug);
+        if (d.company?.name) setStoreName(d.company.name);
         if (d.impersonateCompanyId && d.company) {
           setImpersonating({ name: d.company.name, slug: d.company.slug });
-          setStoreName(d.company.name);
-        } else {
-          fetch('/api/config').then((r) => r.json()).then((cfg) => setStoreName(cfg.storeName));
         }
       });
   }, []);
@@ -41,7 +41,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </button>
         </div>
       )}
-      <AdminSidebar adminEmail={adminEmail} storeName={storeName} />
+      <AdminSidebar adminEmail={adminEmail} storeName={storeName} companySlug={companySlug} />
       <main className="saas-main">{children}</main>
       <Toaster position="top-right" richColors closeButton />
     </div>

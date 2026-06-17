@@ -49,9 +49,9 @@ export default function LoginPageClient() {
       <div className="login-container">
         <div className="login-card card">
           <div className="login-header">
-            <div className="logo-icon logo-icon-lg">UPS</div>
-            <h1>Owner Login</h1>
-            <p>{config.storeName}</p>
+            <div className="hirehub-logo-mark logo-icon-lg">H</div>
+            <h1>Business Login</h1>
+            <p>HireHub — {config.storeName !== 'HireHub' ? config.storeName : 'Hiring Management'}</p>
           </div>
 
           {error && <div className="alert alert-error">{error}</div>}
@@ -71,7 +71,7 @@ export default function LoginPageClient() {
           </form>
 
           <Link href="/" className="login-back-link">
-            &larr; Back to hiring page
+            &larr; Back to HireHub
           </Link>
         </div>
       </div>

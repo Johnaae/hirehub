@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { requireActiveTenant } from '@/lib/auth';
 import { notFound } from '@/lib/tenant';
+import { slugify } from '@/lib/company';
 
 export async function GET() {
   const auth = await requireActiveTenant();
@@ -25,23 +26,36 @@ export async function PATCH(request: Request) {
 
   const body = await request.json();
 
+  const updateData: Record<string, unknown> = {
+    name: body.name,
+    address: body.address,
+    phone: body.phone,
+    email: body.email,
+    website: body.website,
+    description: body.description,
+    logoUrl: body.logoUrl,
+    primaryColor: body.primaryColor,
+    accentColor: body.accentColor,
+    timezone: body.timezone,
+    careerPageBanner: body.careerPageBanner,
+    footer: body.footer,
+    socialLinks: body.socialLinks,
+  };
+
+  if (body.slug) {
+    const newSlug = slugify(body.slug);
+    const existing = await prisma.company.findFirst({
+      where: { slug: newSlug, id: { not: companyId } },
+    });
+    if (existing) {
+      return NextResponse.json({ error: 'This URL slug is already taken' }, { status: 409 });
+    }
+    updateData.slug = newSlug;
+  }
+
   const company = await prisma.company.update({
     where: { id: companyId },
-    data: {
-      name: body.name,
-      address: body.address,
-      phone: body.phone,
-      email: body.email,
-      website: body.website,
-      description: body.description,
-      logoUrl: body.logoUrl,
-      primaryColor: body.primaryColor,
-      accentColor: body.accentColor,
-      timezone: body.timezone,
-      careerPageBanner: body.careerPageBanner,
-      footer: body.footer,
-      socialLinks: body.socialLinks,
-    },
+    data: updateData,
     include: { settings: true },
   });
 

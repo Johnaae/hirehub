@@ -1,15 +1,42 @@
 'use client';
 
+import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
-import PublicHeader from '@/components/PublicHeader';
-import { useConfig } from '@/components/ConfigProvider';
+import { useSearchParams } from 'next/navigation';
 
-export default function SuccessPage() {
-  const { config } = useConfig();
+function SuccessContent() {
+  const searchParams = useSearchParams();
+  const companySlug = searchParams.get('company');
+  const [storeName, setStoreName] = useState('our team');
+
+  useEffect(() => {
+    if (companySlug) {
+      fetch(`/api/careers/${companySlug}`)
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.company?.storeName) setStoreName(d.company.storeName);
+          if (d.company?.primaryColor) {
+            document.documentElement.style.setProperty('--primary', d.company.primaryColor);
+          }
+          if (d.company?.accentColor) {
+            document.documentElement.style.setProperty('--accent', d.company.accentColor);
+          }
+        });
+    }
+  }, [companySlug]);
+
+  const backHref = companySlug ? `/careers/${companySlug}` : '/';
 
   return (
     <div className="page">
-      <PublicHeader />
+      <header className="hirehub-header minimal">
+        <div className="container header-inner">
+          <Link href="/" className="hirehub-logo">
+            <div className="hirehub-logo-mark">H</div>
+            <span className="hirehub-logo-name">HireHub</span>
+          </Link>
+        </div>
+      </header>
       <div className="page-center">
         <div className="success-card card">
           <div className="success-icon">✓</div>
@@ -18,13 +45,21 @@ export default function SuccessPage() {
             Thank you for applying. We have received your application.
           </p>
           <p className="success-subtext">
-            Our team at {config.storeName} will review your application and contact you if your qualifications match our needs.
+            Our team at {storeName} will review your application and contact you if your qualifications match our needs.
           </p>
-          <Link href="/" className="btn btn-primary">
-            Back to Home
+          <Link href={backHref} className="btn btn-primary">
+            {companySlug ? 'Back to Careers' : 'Back to Home'}
           </Link>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={<div className="page"><div className="page-center">Loading...</div></div>}>
+      <SuccessContent />
+    </Suspense>
   );
 }

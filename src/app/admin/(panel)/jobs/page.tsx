@@ -38,6 +38,7 @@ export default function JobsPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [deptFilter, setDeptFilter] = useState('');
+  const [companySlug, setCompanySlug] = useState('');
 
   const loadJobs = useCallback(() => {
     const params = new URLSearchParams();
@@ -64,7 +65,13 @@ export default function JobsPage() {
 
   useEffect(() => {
     setLoading(true);
-    Promise.all([loadJobs(), loadMeta()]).finally(() => setLoading(false));
+    Promise.all([
+      loadJobs(),
+      loadMeta(),
+      fetch('/api/admin/me').then((r) => r.json()).then((d) => {
+        if (d.company?.slug) setCompanySlug(d.company.slug);
+      }),
+    ]).finally(() => setLoading(false));
   }, [loadJobs]);
 
   const openCreate = () => {
@@ -216,6 +223,7 @@ export default function JobsPage() {
             <JobCard
               key={job.id}
               job={job}
+              companySlug={companySlug}
               onEdit={openEdit}
               onDuplicate={handleDuplicate}
               onArchive={handleArchive}
