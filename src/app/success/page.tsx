@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { getCompanyCareerPath } from '@/lib/company-career';
 
 function SuccessContent() {
