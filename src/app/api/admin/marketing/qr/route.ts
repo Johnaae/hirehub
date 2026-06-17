@@ -16,7 +16,15 @@ export async function GET() {
 
   const company = await prisma.company.findUnique({
     where: { id: companyId },
-    select: { id: true, name: true, slug: true, logoUrl: true, primaryColor: true },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      logoUrl: true,
+      address: true,
+      primaryColor: true,
+      accentColor: true,
+    },
   });
 
   if (!company) return notFound('Company not found');
@@ -27,11 +35,11 @@ export async function GET() {
 
   const jobs = await prisma.job.findMany({
     where: { companyId, status: 'Open' },
-    select: { id: true, title: true, department: true, employmentType: true },
+    select: { id: true, title: true, department: true, employmentType: true, salary: true },
     orderBy: { title: 'asc' },
   });
 
-  const qrDataUrl = await generateQrDataUrl(careerUrl);
+  const qrDataUrl = jobs.length > 0 ? await generateQrDataUrl(careerUrl) : null;
 
   return NextResponse.json({
     company: {
@@ -39,7 +47,9 @@ export async function GET() {
       name: company.name,
       slug: company.slug,
       logoUrl: company.logoUrl,
+      address: company.address,
       primaryColor: company.primaryColor,
+      accentColor: company.accentColor,
     },
     careerUrl,
     shortUrl,

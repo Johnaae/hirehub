@@ -14,20 +14,38 @@ export async function GET(request: NextRequest) {
 
   const company = await prisma.company.findUnique({
     where: { id: companyId },
-    select: { id: true, name: true, slug: true, logoUrl: true, primaryColor: true },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      logoUrl: true,
+      address: true,
+      primaryColor: true,
+      accentColor: true,
+    },
   });
 
   if (!company) return notFound('Company not found');
 
   const jobs = await prisma.job.findMany({
     where: { companyId, status: 'Open' },
-    select: { title: true, department: true, employmentType: true },
+    select: { title: true, department: true, employmentType: true, salary: true },
     orderBy: { title: 'asc' },
   });
 
+  if (jobs.length === 0) {
+    return NextResponse.json({ error: 'No open positions' }, { status: 400 });
+  }
+
   const companyRef: CompanyCareerRef = { id: company.id, slug: company.slug };
   const pdf = await generateHiringPosterPdf(
-    { name: company.name, logoUrl: company.logoUrl, primaryColor: company.primaryColor },
+    {
+      name: company.name,
+      logoUrl: company.logoUrl,
+      address: company.address,
+      primaryColor: company.primaryColor,
+      accentColor: company.accentColor,
+    },
     companyRef,
     jobs
   );

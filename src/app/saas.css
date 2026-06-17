@@ -1787,6 +1787,284 @@
   gap: 1.5rem;
 }
 
+.qr-marketing-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.qr-marketing-poster-column {
+  min-width: 0;
+}
+
+.hiring-poster-card {
+  padding: 1.25rem;
+  overflow: hidden;
+}
+
+.hiring-poster-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.hiring-poster-card-header h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1.05rem;
+}
+
+.qr-poster-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.hiring-poster-printable {
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem;
+  background: #e8eaed;
+  border-radius: 10px;
+}
+
+.hiring-poster-sheet {
+  --poster-primary: #1e3a5f;
+  --poster-accent: #3b82f6;
+  width: 8.5in;
+  min-height: 11in;
+  max-width: 100%;
+  box-sizing: border-box;
+  background: #fff;
+  color: #1a1a1a;
+  padding: 0.45in 0.5in 0.4in;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  position: relative;
+  overflow: hidden;
+}
+
+.hiring-poster-accent-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: var(--poster-primary);
+}
+
+.hiring-poster-header {
+  width: 100%;
+  margin-top: 0.15in;
+  margin-bottom: 0.12in;
+}
+
+.hiring-poster-logo {
+  max-height: 52px;
+  max-width: 180px;
+  object-fit: contain;
+  margin-bottom: 0.35rem;
+}
+
+.hiring-poster-company {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1.2;
+}
+
+.hiring-poster-address {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  color: #666;
+  line-height: 1.45;
+  max-width: 5.5in;
+}
+
+.hiring-poster-headline {
+  width: 100%;
+  padding: 0.2in 0 0.15in;
+  border-top: 1px solid color-mix(in srgb, var(--poster-accent) 35%, #ddd);
+  margin-bottom: 0.1in;
+}
+
+.hiring-poster-headline h2 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--poster-primary);
+  line-height: 1.1;
+}
+
+.hiring-poster-headline p {
+  margin: 0.35rem 0 0;
+  font-size: 0.95rem;
+  color: #555;
+}
+
+.hiring-poster-section-title {
+  margin: 0 0 0.45rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--poster-primary);
+  text-align: left;
+  width: 100%;
+}
+
+.hiring-poster-jobs {
+  width: 100%;
+  margin-bottom: 0.2in;
+}
+
+.hiring-poster-job-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.hiring-poster-job-grid:has(:only-child) {
+  grid-template-columns: 1fr;
+}
+
+.hiring-poster-job-card {
+  text-align: left;
+  border: 1px solid color-mix(in srgb, var(--poster-accent) 40%, #ddd);
+  border-radius: 8px;
+  padding: 0.45rem 0.55rem 0.5rem;
+  background: #fafbfc;
+  border-top: 4px solid var(--poster-primary);
+}
+
+.hiring-poster-job-card h4 {
+  margin: 0 0 0.2rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1.25;
+}
+
+.hiring-poster-job-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.4rem;
+  font-size: 0.68rem;
+  color: #666;
+}
+
+.hiring-poster-job-meta span:not(:last-child)::after {
+  content: '·';
+  margin-left: 0.4rem;
+  color: #bbb;
+}
+
+.hiring-poster-job-salary {
+  margin: 0.2rem 0 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--poster-primary);
+}
+
+.hiring-poster-benefits {
+  width: 100%;
+  margin-bottom: 0.15in;
+}
+
+.hiring-poster-benefits ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.3rem 0.75rem;
+  text-align: left;
+}
+
+.hiring-poster-benefits li {
+  font-size: 0.72rem;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.hiring-poster-benefit-check {
+  color: var(--poster-accent);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.hiring-poster-qr {
+  width: 100%;
+  margin-top: auto;
+  padding-top: 0.1in;
+}
+
+.hiring-poster-qr-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--poster-primary);
+}
+
+.hiring-poster-qr-image {
+  width: 1.65in;
+  height: 1.65in;
+  image-rendering: pixelated;
+  border: 2px solid color-mix(in srgb, var(--poster-accent) 50%, #ccc);
+  border-radius: 8px;
+  padding: 4px;
+  background: #fff;
+}
+
+.hiring-poster-qr-tagline {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  color: #555;
+}
+
+.hiring-poster-short-url {
+  margin: 0.2rem 0 0;
+  font-size: 0.68rem;
+  color: #888;
+  word-break: break-all;
+}
+
+.hiring-poster-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5in 0;
+}
+
+.hiring-poster-empty p {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #666;
+}
+
+.hiring-poster-footer {
+  width: 100%;
+  margin-top: 0.2in;
+  padding-top: 0.15in;
+  font-size: 0.62rem;
+  color: #aaa;
+  letter-spacing: 0.04em;
+}
+
 .qr-marketing-preview .qr-code-preview-wrap {
   display: flex;
   justify-content: center;
@@ -1889,6 +2167,7 @@
   .saas-dashboard-grid { grid-template-columns: 1fr; }
   .saas-detail-grid { grid-template-columns: 1fr; }
   .qr-marketing-grid { grid-template-columns: 1fr; }
+  .qr-marketing-layout { grid-template-columns: 1fr; }
   .applicants-source-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
@@ -1909,4 +2188,69 @@
   .saas-stat-grid { grid-template-columns: repeat(2, 1fr); }
   .saas-table th:nth-child(4), .saas-table td:nth-child(4),
   .saas-table th:nth-child(5), .saas-table td:nth-child(5) { display: none; }
+}
+
+/* Hiring poster print — one US Letter page, admin chrome hidden */
+@media print {
+  @page {
+    size: letter portrait;
+    margin: 0;
+  }
+
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .saas-sidebar-wrap,
+  .saas-mobile-toggle,
+  .saas-overlay,
+  .impersonation-banner,
+  .qr-marketing-no-print,
+  .hiring-poster-card-header,
+  .qr-marketing-sidebar {
+    display: none !important;
+  }
+
+  .saas-admin,
+  .saas-main,
+  .saas-page,
+  .qr-marketing-page,
+  .qr-marketing-layout,
+  .qr-marketing-poster-column,
+  .hiring-poster-card {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .hiring-poster-printable {
+    display: flex !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #fff !important;
+    border-radius: 0 !important;
+  }
+
+  .hiring-poster-sheet {
+    width: 8.5in !important;
+    height: 11in !important;
+    min-height: 11in !important;
+    max-height: 11in !important;
+    margin: 0 auto !important;
+    padding: 0.45in 0.5in 0.4in !important;
+    box-shadow: none !important;
+    page-break-after: avoid;
+    page-break-inside: avoid;
+    overflow: hidden;
+  }
 }
