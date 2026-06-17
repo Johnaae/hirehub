@@ -1772,11 +1772,124 @@
   color: var(--gray-500);
 }
 
+/* QR Marketing */
+.saas-breadcrumb {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0 0 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.qr-marketing-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 1.5rem;
+}
+
+.qr-marketing-preview .qr-code-preview-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin: 1rem 0;
+}
+
+.qr-code-image {
+  width: 280px;
+  height: 280px;
+  image-rendering: pixelated;
+}
+
+.qr-url-block {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.qr-url-block code {
+  flex: 1;
+  min-width: 0;
+  word-break: break-all;
+  font-size: 0.85rem;
+  background: var(--bg-muted);
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+}
+
+.qr-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.qr-jobs-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.qr-jobs-list li {
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.qr-jobs-list li:last-child {
+  border-bottom: none;
+}
+
+.saas-dashboard-top-row {
+  margin-bottom: 1.5rem;
+}
+
+.applicants-source-card .saas-card-header {
+  margin-bottom: 1rem;
+}
+
+.applicants-source-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1rem;
+}
+
+.applicants-source-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.applicants-source-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.applicants-source-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.applicants-source-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .saas-charts-grid { grid-template-columns: 1fr; }
   .saas-dashboard-grid { grid-template-columns: 1fr; }
   .saas-detail-grid { grid-template-columns: 1fr; }
+  .qr-marketing-grid { grid-template-columns: 1fr; }
+  .applicants-source-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (max-width: 768px) {

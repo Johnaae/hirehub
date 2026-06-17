@@ -28,6 +28,27 @@ export function getCompanyCareerUrl(company: CompanyCareerRef, origin?: string):
   return path;
 }
 
+export function getCompanyQrCareerPath(company: CompanyCareerRef): string {
+  return `${getCompanyCareerPath(company)}?source=qr`;
+}
+
+export function getCompanyQrCareerUrl(company: CompanyCareerRef, origin?: string): string {
+  const base = origin
+    ? `${origin.replace(/\/$/, '')}${getCompanyCareerPath(company)}`
+    : getCompanyCareerUrl(company, origin);
+  return `${base}?source=qr`;
+}
+
+export function getShortCareerDisplayUrl(company: CompanyCareerRef, origin: string): string {
+  const segment = getCompanyCareerSegment(company);
+  try {
+    const host = new URL(origin).host;
+    return `${host}/careers/${segment}`;
+  } catch {
+    return `/careers/${segment}`;
+  }
+}
+
 export function isValidCompanySlugFormat(slug: string): boolean {
   return slug.length >= 2 && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
 }

@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import StatCards from '@/components/admin/StatCards';
 import DashboardCharts from '@/components/admin/DashboardCharts';
+import ApplicantsBySourceCard from '@/components/admin/ApplicantsBySourceCard';
 import StatusBadge from '@/components/StatusBadge';
+import type { ApplicantSource } from '@/lib/applicant-source';
 
 interface DashboardData {
   stats: Record<string, number>;
@@ -12,6 +14,7 @@ interface DashboardData {
   applicantsByDay: { date: string; count: number }[];
   applicantsByStatus: { status: string; count: number }[];
   applicantsByPosition: { position: string; count: number }[];
+  applicantsBySource: Record<ApplicantSource, number>;
   recentApplicants: Array<{
     id: number; firstName: string; lastName: string;
     position: string; status: string; createdAt: string;
@@ -67,6 +70,9 @@ export default function DashboardPage() {
       ) : data ? (
         <>
           <StatCards stats={data.stats} todayNew={data.todayNew} />
+          <div className="saas-dashboard-top-row">
+            <ApplicantsBySourceCard applicantsBySource={data.applicantsBySource} />
+          </div>
           <DashboardCharts
             applicantsByDay={data.applicantsByDay}
             applicantsByStatus={data.applicantsByStatus}

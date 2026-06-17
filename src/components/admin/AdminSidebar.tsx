@@ -15,6 +15,7 @@ import {
   Search,
   Moon,
   Sun,
+  QrCode,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -25,6 +26,7 @@ const navItems = [
   { href: '/admin/applicants', label: 'Applicants', icon: Users },
   { href: '/admin/jobs', label: 'Jobs', icon: Briefcase },
   { href: '/admin/interviews', label: 'Interviews', icon: Calendar },
+  { href: '/admin/marketing/qr', label: 'QR Code', icon: QrCode },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 

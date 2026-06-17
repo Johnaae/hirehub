@@ -45,7 +45,8 @@ function buildPayload(
   availability: Record<string, string>,
   resumeInfo: { filename: string; url: string; key: string } | null,
   jobId?: number,
-  companySlug?: string
+  companySlug?: string,
+  source?: string
 ) {
   return {
     firstName: form.firstName.trim(),
@@ -76,6 +77,7 @@ function buildPayload(
     resumeKey: resumeInfo?.key || null,
     ...(jobId ? { jobId } : {}),
     ...(companySlug ? { companySlug } : {}),
+    ...(source ? { source } : {}),
   };
 }
 
@@ -120,11 +122,13 @@ function formatFieldLabel(field: string): string {
 export default function ApplicationForm({
   jobId,
   companySlug,
+  applySource,
   defaultPosition = '',
   defaultEmploymentType = '',
 }: {
   jobId?: number;
   companySlug?: string;
+  applySource?: string;
   defaultPosition?: string;
   defaultEmploymentType?: string;
 }) {
@@ -231,7 +235,7 @@ export default function ApplicationForm({
 
     setSubmitting(true);
 
-    const payload = buildPayload(form, availability, resumeInfo, jobId, companySlug);
+    const payload = buildPayload(form, availability, resumeInfo, jobId, companySlug, applySource);
     console.log('Submitting application payload:', payload);
 
     try {

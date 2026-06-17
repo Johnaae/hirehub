@@ -5,6 +5,7 @@ import { sendNewApplicationEmail, sendApplicationReceivedEmail } from '@/lib/ema
 import { logActivity } from '@/lib/activity';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
 import { getCompanyByCareerRef } from '@/lib/company';
+import { normalizeApplicantSource } from '@/lib/applicant-source';
 
 async function resolveCompanyId(
   jobId: number | null,
@@ -137,6 +138,7 @@ export async function POST(request: NextRequest) {
         resumeFilename: data.resumeFilename ?? null,
         resumeUrl: data.resumeUrl ?? null,
         resumeKey: data.resumeKey ?? null,
+        source: normalizeApplicantSource(body.source),
       },
     });
 

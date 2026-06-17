@@ -183,6 +183,7 @@ model Applicant {
   resumeUrl                  String?   @map("resume_url")
   resumeKey                  String?   @map("resume_key")
   status                     String    @default("New")
+  source                     String    @default("website")
   notes                      String    @default("")
   createdAt                  DateTime  @default(now()) @map("created_at")
   updatedAt                  DateTime  @updatedAt @map("updated_at")
@@ -194,6 +195,7 @@ model Applicant {
   activities     ActivityLog[]
 
   @@index([companyId, status])
+  @@index([companyId, source])
   @@index([companyId, position])
   @@index([companyId, createdAt(sort: Desc)])
   @@index([email])

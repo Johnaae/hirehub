@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma';
 import { requireActiveTenant } from '@/lib/auth';
 import { tenantWhere } from '@/lib/tenant';
 import { startOfMonth, startOfDay } from 'date-fns';
+import { APPLICANT_SOURCES, type ApplicantSource } from '@/lib/applicant-source';
 
 export async function GET() {
   const auth = await requireActiveTenant();
@@ -25,6 +26,7 @@ export async function GET() {
       recentHires,
       recentActivity,
       todayNew,
+      sourceCounts,
     ] = await Promise.all([
       prisma.applicant.count({ where: tenantWhere(companyId) }),
       prisma.applicant.groupBy({
@@ -80,6 +82,11 @@ export async function GET() {
       prisma.applicant.count({
         where: tenantWhere(companyId, { createdAt: { gte: todayStart } }),
       }),
+      prisma.applicant.groupBy({
+        by: ['source'],
+        where: tenantWhere(companyId),
+        _count: { source: true },
+      }),
     ]);
 
     const stats: Record<string, number> = {
@@ -101,11 +108,26 @@ export async function GET() {
     }
     const applicantsByDay = Object.entries(dailyMap).map(([date, count]) => ({ date, count }));
 
+    const applicantsBySource: Record<ApplicantSource, number> = {
+      website: 0,
+      qr: 0,
+      facebook: 0,
+      indeed: 0,
+      other: 0,
+    };
+    for (const row of sourceCounts) {
+      const key = (APPLICANT_SOURCES as readonly string[]).includes(row.source)
+        ? (row.source as ApplicantSource)
+        : 'other';
+      applicantsBySource[key] += row._count.source;
+    }
+
     return NextResponse.json({
       stats,
       openJobs,
       todayNew,
       applicantsByDay,
+      applicantsBySource,
       applicantsByStatus: statusCounts.map((s) => ({ status: s.status, count: s._count.status })),
       applicantsByPosition: positionCounts.map((p) => ({ position: p.position, count: p._count.position })),
       recentApplicants,

@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useParams, notFound } from 'next/navigation';
+import { useParams, notFound, useSearchParams } from 'next/navigation';
 import { MapPin, Briefcase, ArrowRight, Globe, Phone } from 'lucide-react';
+import { APPLY_SOURCE_STORAGE_KEY, normalizeApplicantSource } from '@/lib/applicant-source';
 
 interface CareerCompany {
   storeName: string;
@@ -31,12 +32,24 @@ interface CareerJob {
   openings: number;
 }
 
-export default function CareersPage() {
+function CareersPageContent() {
   const { slug } = useParams<{ slug: string }>();
+  const searchParams = useSearchParams();
   const [company, setCompany] = useState<CareerCompany | null>(null);
   const [jobs, setJobs] = useState<CareerJob[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFoundState, setNotFoundState] = useState(false);
+
+  useEffect(() => {
+    const source = searchParams.get('source');
+    if (source) {
+      try {
+        sessionStorage.setItem(APPLY_SOURCE_STORAGE_KEY, normalizeApplicantSource(source));
+      } catch {
+        // ignore
+      }
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!slug) return;
@@ -154,5 +167,13 @@ export default function CareersPage() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function CareersPage() {
+  return (
+    <Suspense fallback={<div className="page"><div className="container" style={{ padding: '4rem 0', textAlign: 'center' }}>Loading careers...</div></div>}>
+      <CareersPageContent />
+    </Suspense>
   );
 }

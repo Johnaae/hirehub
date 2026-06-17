@@ -72,6 +72,10 @@ export const applicationSchema = z.object({
   resumeFilename: optionalLongString,
   resumeUrl: optionalUrl,
   resumeKey: optionalLongString,
+  source: z.preprocess(
+    (val) => (typeof val === 'string' ? val.trim().toLowerCase() : val),
+    z.string().max(50).optional()
+  ),
 });
 
 export type ApplicationInput = z.infer<typeof applicationSchema>;

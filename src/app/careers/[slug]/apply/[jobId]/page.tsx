@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useParams, notFound } from 'next/navigation';
+import { useParams, notFound, useSearchParams } from 'next/navigation';
 import { MapPin, Briefcase, ArrowLeft } from 'lucide-react';
 import ApplicationForm from '@/components/ApplicationForm';
+import { APPLY_SOURCE_STORAGE_KEY, normalizeApplicantSource } from '@/lib/applicant-source';
 
 interface Job {
   id: number;
@@ -26,12 +27,34 @@ interface CompanyConfig {
   accentColor: string;
 }
 
-export default function CareerApplyPage() {
+function CareerApplyContent() {
   const { slug, jobId } = useParams<{ slug: string; jobId: string }>();
+  const searchParams = useSearchParams();
   const [job, setJob] = useState<Job | null>(null);
   const [company, setCompany] = useState<CompanyConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFoundState, setNotFoundState] = useState(false);
+  const [applySource, setApplySource] = useState('website');
+
+  useEffect(() => {
+    const fromQuery = searchParams.get('source');
+    if (fromQuery) {
+      const normalized = normalizeApplicantSource(fromQuery);
+      setApplySource(normalized);
+      try {
+        sessionStorage.setItem(APPLY_SOURCE_STORAGE_KEY, normalized);
+      } catch {
+        // ignore
+      }
+      return;
+    }
+    try {
+      const stored = sessionStorage.getItem(APPLY_SOURCE_STORAGE_KEY);
+      if (stored) setApplySource(normalizeApplicantSource(stored));
+    } catch {
+      // ignore
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!slug || !jobId) return;
@@ -92,10 +115,19 @@ export default function CareerApplyPage() {
         <ApplicationForm
           jobId={job.id}
           companySlug={slug}
+          applySource={applySource}
           defaultPosition={job.title}
           defaultEmploymentType={job.employmentType}
         />
       </div>
     </div>
+  );
+}
+
+export default function CareerApplyPage() {
+  return (
+    <Suspense fallback={<div className="page"><div className="container" style={{ padding: '4rem 0' }}>Loading...</div></div>}>
+      <CareerApplyContent />
+    </Suspense>
   );
 }
