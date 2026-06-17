@@ -3,6 +3,7 @@ import { ensureDefaultAdmin, ensureDefaultCompany, ensureSuperAdmin } from '../s
 import {
   ensureCompanyIndustries,
   ensureSystemJobTemplates,
+  fixDefaultSlugs,
   resyncAllCompanyJobLookups,
 } from '../src/lib/job-seed';
 
@@ -12,6 +13,7 @@ async function main() {
   await ensureDefaultAdmin();
   await ensureSuperAdmin();
   await ensureCompanyIndustries();
+  await fixDefaultSlugs();
   await ensureSystemJobTemplates();
   await resyncAllCompanyJobLookups();
   console.log('Seed complete.');

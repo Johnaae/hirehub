@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
   });
 
   await prisma.applicant.update({
-    where: { id: data.applicantId },
+    where: tenantWhereId(companyId, data.applicantId),
     data: { status: 'Interview' },
   });
 

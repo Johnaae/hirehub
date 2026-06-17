@@ -11,10 +11,9 @@ async function main() {
 
   await prisma.$executeRawUnsafe(`
     INSERT INTO companies (id, name, slug, primary_color, accent_color, created_at, updated_at)
-    VALUES (1, 'The UPS Store Hiring Portal', 'default', '#351C15', '#FFB500', NOW(), NOW())
+    VALUES (1, 'Demo Company', 'demo-company', '#1e3a5f', '#3b82f6', NOW(), NOW())
     ON CONFLICT (id) DO NOTHING
   `).catch(async () => {
-    // Table may not exist yet — create via Prisma after db:push
     console.log('Companies table not ready yet. Run npm run db:push first, then re-run this script if needed.');
   });
 

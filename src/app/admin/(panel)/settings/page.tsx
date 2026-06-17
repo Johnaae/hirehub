@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { Save, Building2, Palette, Mail, ShieldCheck, Copy, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import AccountSecuritySection from '@/components/admin/settings/AccountSecuritySection';
+import { getCompanyCareerPath, getCompanyCareerUrl, type CompanyCareerRef } from '@/lib/company-career';
+import { COMPANY_UPDATED_EVENT } from '@/components/admin/AdminLayout';
 import { COMPANY_INDUSTRIES, INDUSTRY_LABELS, type CompanyIndustry } from '@/lib/industry';
 
 type SettingsTab = 'company' | 'branding' | 'email' | 'account';
@@ -20,6 +22,7 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('company');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [companyId, setCompanyId] = useState(0);
   const [form, setForm] = useState({
     name: '', slug: '', industry: 'SHIPPING_RETAIL' as CompanyIndustry, address: '', phone: '', email: '', website: '', description: '',
     careerPageBanner: '',
@@ -29,9 +32,9 @@ export default function SettingsPage() {
     },
   });
 
-  const careerUrl = form.slug
-    ? `${typeof window !== 'undefined' ? window.location.origin : ''}/careers/${form.slug}`
-    : '';
+  const companyRef: CompanyCareerRef = { id: companyId, slug: form.slug || null };
+  const careerPath = companyId ? getCompanyCareerPath(companyRef) : '';
+  const careerUrl = companyId ? getCompanyCareerUrl(companyRef) : '';
 
   const copyCareerUrl = () => {
     if (!careerUrl) return;
@@ -44,6 +47,7 @@ export default function SettingsPage() {
       .then((r) => r.json())
       .then((d) => {
         if (d.company) {
+          setCompanyId(d.company.id);
           setForm({
             name: d.company.name || '',
             slug: d.company.slug || '',
@@ -79,11 +83,23 @@ export default function SettingsPage() {
       body: JSON.stringify(form),
     });
     if (res.ok) {
+      const data = await res.json();
       toast.success('Settings saved');
       document.documentElement.style.setProperty('--primary', form.primaryColor);
       document.documentElement.style.setProperty('--accent', form.accentColor);
+      if (data.company) {
+        setCompanyId(data.company.id);
+        setForm((prev) => ({
+          ...prev,
+          slug: data.company.slug || prev.slug,
+          name: data.company.name || prev.name,
+          industry: data.company.industry || prev.industry,
+        }));
+        window.dispatchEvent(new CustomEvent(COMPANY_UPDATED_EVENT, { detail: data.company }));
+      }
     } else {
-      toast.error('Failed to save settings');
+      const err = await res.json().catch(() => ({}));
+      toast.error(err.error || 'Failed to save settings');
     }
     setSaving(false);
   };
@@ -149,16 +165,16 @@ export default function SettingsPage() {
                   onChange={(e) => setForm({ ...form, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
                   placeholder="your-store-name"
                 />
-                <span className="field-hint">Used in your career page URL: /careers/{form.slug || 'your-slug'}</span>
+                <span className="field-hint">Used in your career page URL: {careerPath || '/careers/your-slug'}</span>
               </div>
-              {form.slug && (
+              {careerPath && (
                 <div className="career-url-copy">
                   <ExternalLink size={16} />
-                  <code>{`/careers/${form.slug}`}</code>
+                  <code>{careerPath}</code>
                   <button type="button" className="saas-btn saas-btn-sm saas-btn-outline" onClick={copyCareerUrl}>
                     <Copy size={14} /> Copy link
                   </button>
-                  <Link href={`/careers/${form.slug}`} target="_blank" className="saas-link">Preview</Link>
+                  <Link href={careerPath} target="_blank" className="saas-link">Preview</Link>
                 </div>
               )}
               <div className="saas-form-group">

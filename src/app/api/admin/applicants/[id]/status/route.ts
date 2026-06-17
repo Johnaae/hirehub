@@ -32,7 +32,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     if (!previous) return notFound('Applicant not found');
 
     const applicant = await prisma.applicant.update({
-      where: { id: applicantId },
+      where: tenantWhereId(companyId, applicantId),
       data: { status: parsed.data.status },
     });
 

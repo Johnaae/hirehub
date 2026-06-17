@@ -20,7 +20,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
   if (!applicant) return notFound('Applicant not found');
 
   const notes = await prisma.applicantNote.findMany({
-    where: { applicantId },
+    where: { applicantId, companyId },
     include: { admin: { select: { email: true, name: true } } },
     orderBy: { updatedAt: 'desc' },
   });
@@ -52,14 +52,14 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     const existing = await prisma.applicantNote.findFirst({
-      where: { applicantId, adminId: session.id },
+      where: { applicantId, adminId: session.id, companyId },
       orderBy: { updatedAt: 'desc' },
     });
 
     let note;
     if (existing) {
       note = await prisma.applicantNote.update({
-        where: { id: existing.id },
+        where: { id: existing.id, companyId },
         data: { content: parsed.data.notes },
         include: { admin: { select: { email: true, name: true } } },
       });
@@ -76,7 +76,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     await prisma.applicant.update({
-      where: { id: applicantId },
+      where: tenantWhereId(companyId, applicantId),
       data: { notes: parsed.data.notes },
     });
 

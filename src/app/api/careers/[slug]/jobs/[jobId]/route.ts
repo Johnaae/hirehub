@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getCompanyBySlug } from '@/lib/company';
+import { getCompanyByCareerRef } from '@/lib/company';
 import { getStoreConfig } from '@/lib/config';
 
 type RouteParams = { params: Promise<{ slug: string; jobId: string }> };
@@ -13,7 +13,7 @@ export async function GET(_req: Request, { params }: RouteParams) {
     return NextResponse.json({ error: 'Invalid job ID' }, { status: 400 });
   }
 
-  const companyRecord = await getCompanyBySlug(slug);
+  const companyRecord = await getCompanyByCareerRef(slug);
   if (!companyRecord || companyRecord.status === 'suspended') {
     return NextResponse.json({ error: 'Company not found' }, { status: 404 });
   }

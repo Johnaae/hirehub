@@ -5,8 +5,9 @@ import { Plus, Briefcase, Search, Filter, LayoutTemplate } from 'lucide-react';
 import { toast } from 'sonner';
 import JobCard, { type JobCardData } from '@/components/admin/JobCard';
 import JobFormPanel, { type JobLookups, type JobTemplate, type JobFormValues } from '@/components/admin/JobFormPanel';
-import { linesToArray } from '@/lib/jobs';
-import { JOB_STATUSES } from '@/lib/jobs';
+import { linesToArray, JOB_STATUSES } from '@/lib/jobs';
+import { type CompanyCareerRef } from '@/lib/company-career';
+import { COMPANY_UPDATED_EVENT } from '@/components/admin/AdminLayout';
 
 interface JobStats {
   Open: number;
@@ -38,7 +39,7 @@ export default function JobsPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [deptFilter, setDeptFilter] = useState('');
-  const [companySlug, setCompanySlug] = useState('');
+  const [companyRef, setCompanyRef] = useState<CompanyCareerRef | null>(null);
 
   const loadJobs = useCallback(() => {
     const params = new URLSearchParams();
@@ -83,10 +84,19 @@ export default function JobsPage() {
       loadJobs(),
       loadMeta(),
       fetch('/api/admin/me').then((r) => r.json()).then((d) => {
-        if (d.company?.slug) setCompanySlug(d.company.slug);
+        if (d.company) setCompanyRef({ id: d.company.id, slug: d.company.slug });
       }),
     ]).finally(() => setLoading(false));
   }, [loadJobs]);
+
+  useEffect(() => {
+    const onCompanyUpdated = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { id: number; slug?: string };
+      if (detail?.id) setCompanyRef({ id: detail.id, slug: detail.slug ?? null });
+    };
+    window.addEventListener(COMPANY_UPDATED_EVENT, onCompanyUpdated);
+    return () => window.removeEventListener(COMPANY_UPDATED_EVENT, onCompanyUpdated);
+  }, []);
 
   const openCreate = () => {
     setEditingId(null);
@@ -239,7 +249,7 @@ export default function JobsPage() {
             <JobCard
               key={job.id}
               job={job}
-              companySlug={companySlug}
+              companyRef={companyRef}
               onEdit={openEdit}
               onDuplicate={handleDuplicate}
               onArchive={handleArchive}

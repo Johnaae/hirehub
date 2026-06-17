@@ -46,7 +46,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
     });
     if (!existing) return notFound('Applicant not found');
 
-    const deleted = await prisma.applicant.delete({ where: { id: applicantId } });
+    const deleted = await prisma.applicant.delete({ where: tenantWhereId(companyId, applicantId) });
     return NextResponse.json({ message: 'Applicant deleted successfully', id: deleted.id });
   } catch (err) {
     console.error('Delete applicant error:', err);

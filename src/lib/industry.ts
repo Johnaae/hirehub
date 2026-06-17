@@ -12,7 +12,7 @@ export const COMPANY_INDUSTRIES = [
 export type CompanyIndustry = (typeof COMPANY_INDUSTRIES)[number];
 
 export const INDUSTRY_LABELS: Record<CompanyIndustry, string> = {
-  SHIPPING_RETAIL: 'Shipping & Print Retail (UPS Store, FedEx, etc.)',
+  SHIPPING_RETAIL: 'Shipping & Print Retail',
   NAIL_SALON: 'Nail Salon & Spa',
   RESTAURANT: 'Restaurant & Food Service',
   ROOFING: 'Roofing & Construction',

@@ -2,10 +2,11 @@
 
 import {
   MapPin, Briefcase, Users, DollarSign, MoreVertical,
-  Pencil, Copy, Archive, Trash2, ExternalLink, Eye,
+  Pencil, Copy, Archive, Trash2, ExternalLink, Eye, Calendar, UserCheck,
 } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
+import { getCompanyApplyPath, type CompanyCareerRef } from '@/lib/company-career';
 
 export interface JobCardData {
   id: number;
@@ -16,7 +17,11 @@ export interface JobCardData {
   location: string | null;
   salary: string | null;
   status: string;
+  openings: number;
   updatedAt?: string;
+  hiredCount?: number;
+  interviewCount?: number;
+  remainingOpenings?: number;
   _count: { applicants: number };
 }
 
@@ -26,11 +31,12 @@ const STATUS_STYLES: Record<string, string> = {
   Draft: 'draft',
   Archived: 'archived',
   Paused: 'paused',
+  Filled: 'filled',
 };
 
 interface JobCardProps {
   job: JobCardData;
-  companySlug?: string;
+  companyRef?: CompanyCareerRef | null;
   onEdit: (job: JobCardData) => void;
   onDuplicate: (id: number) => void;
   onArchive: (id: number) => void;
@@ -38,13 +44,24 @@ interface JobCardProps {
   onPublish: (id: number) => void;
 }
 
-export default function JobCard({ job, companySlug, onEdit, onDuplicate, onArchive, onDelete, onPublish }: JobCardProps) {
+export default function JobCard({
+  job,
+  companyRef,
+  onEdit,
+  onDuplicate,
+  onArchive,
+  onDelete,
+  onPublish,
+}: JobCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const publicApplyUrl = companySlug ? `/careers/${companySlug}/apply/${job.id}` : null;
+  const publicApplyUrl =
+    companyRef && companyRef.id ? getCompanyApplyPath(companyRef, job.id) : null;
 
   const fmt = (d?: string) =>
     d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+
+  const remaining = job.remainingOpenings ?? Math.max(0, job.openings - (job.hiredCount ?? 0));
 
   return (
     <article className="ats-job-card">
@@ -98,6 +115,9 @@ export default function JobCard({ job, companySlug, onEdit, onDuplicate, onArchi
         <span><Briefcase size={14} /> {job.employmentType}</span>
         {job.salary && <span><DollarSign size={14} /> {job.salary}</span>}
         <span><Users size={14} /> {job._count.applicants} applicants</span>
+        <span><Calendar size={14} /> {job.interviewCount ?? 0} interviews</span>
+        <span><UserCheck size={14} /> {job.hiredCount ?? 0} hired</span>
+        <span>{job.openings} opening{job.openings !== 1 ? 's' : ''} · {remaining} remaining</span>
       </div>
 
       {job.updatedAt && (

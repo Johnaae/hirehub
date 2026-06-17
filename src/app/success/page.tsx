@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { getCompanyCareerPath } from '@/lib/company-career';
 
 function SuccessContent() {
   const searchParams = useSearchParams();
@@ -25,7 +25,7 @@ function SuccessContent() {
     }
   }, [companySlug]);
 
-  const backHref = companySlug ? `/careers/${companySlug}` : '/';
+  const backHref = companySlug ? getCompanyCareerPath({ id: 0, slug: companySlug }) : '/';
 
   return (
     <div className="page">

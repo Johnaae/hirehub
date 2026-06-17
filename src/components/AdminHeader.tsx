@@ -22,7 +22,7 @@ export default function AdminHeader({ adminEmail }: AdminHeaderProps) {
     <header className="header admin-header">
       <div className="container header-inner">
         <Link href="/admin" className="logo">
-          <div className="logo-icon">UPS</div>
+          <div className="logo-icon">{config.storeName?.trim().charAt(0).toUpperCase() || 'H'}</div>
           <div className="logo-text">
             <span className="logo-name">{config.storeName}</span>
             <span className="logo-subtitle">Admin Dashboard</span>

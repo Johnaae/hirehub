@@ -121,7 +121,7 @@ export default function CareersPage() {
           </h2>
           {jobs.length === 0 ? (
             <div className="card public-empty-jobs">
-              <p>No open positions at this time. Please check back soon.</p>
+              <p>No open positions at this time.</p>
             </div>
           ) : (
             <div className="public-jobs-grid">

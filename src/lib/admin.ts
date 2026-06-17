@@ -3,7 +3,8 @@ import prisma from './prisma';
 import { slugify } from './company';
 
 export async function ensureDefaultCompany() {
-  const storeName = process.env.STORE_NAME || 'The UPS Store Hiring Portal';
+  const storeName = process.env.STORE_NAME || 'Demo Company';
+  const slug = process.env.COMPANY_SLUG ? slugify(process.env.COMPANY_SLUG) : 'demo-company';
 
   const existing = await prisma.company.findUnique({ where: { id: 1 } });
   if (!existing) {
@@ -11,12 +12,12 @@ export async function ensureDefaultCompany() {
       data: {
         id: 1,
         name: storeName,
-        slug: process.env.COMPANY_SLUG || 'default',
+        slug,
         address: process.env.STORE_ADDRESS || null,
         email: process.env.OWNER_EMAIL || null,
         ownerEmail: process.env.OWNER_EMAIL || null,
-        primaryColor: process.env.PRIMARY_COLOR || '#351C15',
-        accentColor: process.env.ACCENT_COLOR || '#FFB500',
+        primaryColor: process.env.PRIMARY_COLOR || '#1e3a5f',
+        accentColor: process.env.ACCENT_COLOR || '#3b82f6',
         status: 'active',
         subscriptionStatus: 'active',
         industry: 'SHIPPING_RETAIL',
@@ -40,6 +41,7 @@ export async function ensureDefaultCompany() {
         subscriptionStatus: existing.subscriptionStatus || 'active',
         industry: existing.industry || 'SHIPPING_RETAIL',
         ownerEmail: existing.ownerEmail || process.env.OWNER_EMAIL || existing.email,
+        ...(existing.slug === 'default' ? { slug } : {}),
       },
     });
   }

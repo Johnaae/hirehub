@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { requireActiveTenant } from '@/lib/auth';
 import { notFound } from '@/lib/tenant';
-import { slugify } from '@/lib/company';
+import { validateCompanySlug } from '@/lib/company';
 import { isValidIndustry, type CompanyIndustry } from '@/lib/industry';
 import { syncCompanyJobLookups } from '@/lib/job-seed';
 
@@ -51,15 +51,18 @@ export async function PATCH(request: Request) {
     updateData.industry = body.industry;
   }
 
-  if (body.slug) {
-    const newSlug = slugify(body.slug);
+  if (body.slug !== undefined && body.slug !== null && String(body.slug).trim()) {
+    const slugCheck = validateCompanySlug(String(body.slug));
+    if (!slugCheck.ok) {
+      return NextResponse.json({ error: slugCheck.error }, { status: 400 });
+    }
     const existing = await prisma.company.findFirst({
-      where: { slug: newSlug, id: { not: companyId } },
+      where: { slug: slugCheck.slug, id: { not: companyId } },
     });
     if (existing) {
       return NextResponse.json({ error: 'This URL slug is already taken' }, { status: 409 });
     }
-    updateData.slug = newSlug;
+    updateData.slug = slugCheck.slug;
   }
 
   const previous = await prisma.company.findUnique({

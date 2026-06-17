@@ -1,13 +1,12 @@
 /**
- * Store settings defaults.
- * Runtime values come from environment variables — see .env.example
+ * Neutral HireHub defaults — runtime values come from each company's database record.
  */
 export const storeSettings = {
-  storeName: 'The UPS Store Hiring Portal',
-  storeAddress: '123 Main Street, Your City, ST 12345',
-  ownerEmail: 'owner@theupsstore.com',
-  primaryColor: '#351C15',
-  accentColor: '#FFB500',
+  storeName: 'HireHub',
+  storeAddress: '',
+  ownerEmail: '',
+  primaryColor: '#1e3a5f',
+  accentColor: '#3b82f6',
 };
 
 export default storeSettings;

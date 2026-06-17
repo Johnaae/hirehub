@@ -1,11 +1,10 @@
 import prisma from './prisma';
-import { DEFAULT_COMPANY_ID } from './company';
 
 /**
  * Resolves the email address used for owner alerts (new applicants, interviews, etc.).
  * Priority: admin.notificationEmail → company settings ownerEmail → company email → env OWNER_EMAIL
  */
-export async function getOwnerNotificationEmail(companyId: number = DEFAULT_COMPANY_ID, adminId?: number): Promise<string | null> {
+export async function getOwnerNotificationEmail(companyId: number, adminId?: number): Promise<string | null> {
   const select = { notificationEmail: true, email: true } as const;
 
   if (adminId) {

@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
   }
   if (department) where.department = department;
 
-  const [jobs, statusCounts] = await Promise.all([
+  const [jobsRaw, statusCounts, hiredByJob, interviewsByJob] = await Promise.all([
     prisma.job.findMany({
       where,
       orderBy: { updatedAt: 'desc' },
@@ -54,9 +54,51 @@ export async function GET(request: NextRequest) {
       where: tenantWhere(companyId),
       _count: { status: true },
     }),
+    prisma.applicant.groupBy({
+      by: ['jobId'],
+      where: { companyId, status: 'Hired', jobId: { not: null } },
+      _count: { jobId: true },
+    }),
+    prisma.interview.groupBy({
+      by: ['applicantId'],
+      where: { companyId },
+      _count: { applicantId: true },
+    }),
   ]);
 
-  const stats: Record<string, number> = { Open: 0, Closed: 0, Draft: 0, Archived: 0, Paused: 0, Total: 0 };
+  const hiredMap = new Map(hiredByJob.map((h) => [h.jobId, h._count.jobId]));
+  const applicantJobIds = await prisma.applicant.findMany({
+    where: { companyId, jobId: { in: jobsRaw.map((j) => j.id) } },
+    select: { id: true, jobId: true },
+  });
+  const interviewCountByJob = new Map<number, number>();
+  const applicantToJob = new Map(applicantJobIds.map((a) => [a.id, a.jobId]));
+  for (const row of interviewsByJob) {
+    const jobId = applicantToJob.get(row.applicantId);
+    if (jobId) {
+      interviewCountByJob.set(jobId, (interviewCountByJob.get(jobId) || 0) + row._count.applicantId);
+    }
+  }
+
+  const jobs = jobsRaw.map((job) => {
+    const hired = hiredMap.get(job.id) || 0;
+    return {
+      ...job,
+      hiredCount: hired,
+      interviewCount: interviewCountByJob.get(job.id) || 0,
+      remainingOpenings: Math.max(0, job.openings - hired),
+    };
+  });
+
+  const stats: Record<string, number> = {
+    Open: 0,
+    Closed: 0,
+    Draft: 0,
+    Archived: 0,
+    Paused: 0,
+    Filled: 0,
+    Total: 0,
+  };
   for (const s of statusCounts) {
     stats[s.status] = s._count.status;
     stats.Total += s._count.status;
@@ -93,7 +135,7 @@ export async function POST(request: NextRequest) {
       requirements: data.requirements,
       benefits: data.benefits,
       location: data.location,
-      status: data.status || 'Draft',
+      status: data.status || 'Open',
       openings: data.openings ?? 1,
     },
   });

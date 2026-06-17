@@ -52,7 +52,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   }
 
   const job = await prisma.job.update({
-    where: { id: jobId },
+    where: tenantWhereId(companyId, jobId),
     data: parsed.data,
   });
   return NextResponse.json({ job });
@@ -68,6 +68,6 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
   const existing = await prisma.job.findFirst({ where: tenantWhereId(companyId, jobId) });
   if (!existing) return notFound('Job not found');
 
-  await prisma.job.delete({ where: { id: jobId } });
+  await prisma.job.delete({ where: tenantWhereId(companyId, jobId) });
   return NextResponse.json({ message: 'Job deleted' });
 }

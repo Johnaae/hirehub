@@ -193,7 +193,7 @@ export default function ApplicantDetailPage() {
               ['Authorized to Work', applicant.authorizedToWork ? 'Yes' : 'No'],
               ['18+ Years Old', applicant.over18 ? 'Yes' : 'No'],
               ['Customer Service Exp.', applicant.customerServiceExperience ? 'Yes' : 'No'],
-              ['UPS/Retail Exp.', applicant.upsPrintShippingExperience ? 'Yes' : 'No'],
+              ['Retail/Shipping Exp.', applicant.upsPrintShippingExperience ? 'Yes' : 'No'],
             ]} />
           </Section>
 

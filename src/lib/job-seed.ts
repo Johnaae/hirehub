@@ -1,10 +1,10 @@
 import prisma from './prisma';
 import { SYSTEM_TEMPLATES_BY_INDUSTRY } from './job-seed-data';
 import { getLookupSeedForIndustry } from './job-lookup-seed';
-import { DEFAULT_COMPANY_ID } from './company';
 import type { CompanyIndustry } from './industry';
 import { COMPANY_INDUSTRIES, isValidIndustry } from './industry';
 import { LOOKUP_CATEGORIES } from './jobs';
+import { slugify } from './company';
 
 /**
  * Sync job lookup options for a company to match its industry.
@@ -67,7 +67,7 @@ export async function syncCompanyJobLookups(companyId: number, industry?: Compan
 }
 
 /** @deprecated use syncCompanyJobLookups */
-export async function ensureJobLookups(companyId: number = DEFAULT_COMPANY_ID) {
+export async function ensureJobLookups(companyId: number) {
   return syncCompanyJobLookups(companyId);
 }
 
@@ -167,9 +167,9 @@ export async function ensureCompanyIndustries() {
   await prisma.company.updateMany({
     where: {
       OR: [
-        { id: DEFAULT_COMPANY_ID },
         { slug: 'default' },
-        { name: { contains: 'UPS', mode: 'insensitive' } },
+        { name: { contains: 'ups store', mode: 'insensitive' } },
+        { slug: { contains: 'ups', mode: 'insensitive' } },
       ],
     },
     data: { industry: 'SHIPPING_RETAIL' },
@@ -186,6 +186,21 @@ export async function ensureCompanyIndustries() {
     },
     data: { industry: 'NAIL_SALON' },
   });
+}
+
+/** Fix companies still using the reserved slug "default". */
+export async function fixDefaultSlugs() {
+  const companies = await prisma.company.findMany({ where: { slug: 'default' } });
+  for (const company of companies) {
+    const base = slugify(company.name) || `company-${company.id}`;
+    let candidate = base;
+    let n = 1;
+    while (await prisma.company.findFirst({ where: { slug: candidate, id: { not: company.id } } })) {
+      candidate = `${base}-${n++}`;
+    }
+    await prisma.company.update({ where: { id: company.id }, data: { slug: candidate } });
+    console.log(`Renamed company ${company.id} slug default → ${candidate}`);
+  }
 }
 
 export { SYSTEM_TEMPLATES_BY_INDUSTRY };

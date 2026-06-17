@@ -38,14 +38,14 @@ function createTransporter(config: SmtpConfig) {
   });
 }
 
-function emailWrapper(title: string, body: string, storeName: string) {
+function emailWrapper(title: string, body: string, storeName: string, primaryColor = '#1e3a5f', accentColor = '#3b82f6') {
   return `
     <div style="font-family: Inter, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
-      <div style="background: #351C15; color: #FFB500; padding: 16px 24px; border-radius: 8px 8px 0 0;">
+      <div style="background: ${primaryColor}; color: ${accentColor}; padding: 16px 24px; border-radius: 8px 8px 0 0;">
         <strong>${storeName}</strong>
       </div>
       <div style="background: #fff; padding: 24px; border: 1px solid #e5e5e5; border-top: none; border-radius: 0 0 8px 8px;">
-        <h2 style="color: #351C15; margin-top: 0;">${title}</h2>
+        <h2 style="color: ${primaryColor}; margin-top: 0;">${title}</h2>
         ${body}
         <p style="color: #737373; font-size: 13px; margin-top: 24px;">This is an automated message from ${storeName}.</p>
       </div>
@@ -68,7 +68,7 @@ export async function sendEmail(to: string, subject: string, html: string, text:
 }
 
 export async function sendNewApplicationEmail(applicant: Applicant) {
-  const config = await getStoreConfig();
+  const config = await getStoreConfig(applicant.companyId);
   const ownerEmail = await getOwnerNotificationEmail(applicant.companyId);
   if (!ownerEmail) return { sent: false, reason: 'Notification email not configured' };
 
@@ -81,14 +81,16 @@ export async function sendNewApplicationEmail(applicant: Applicant) {
      <ul><li><strong>Position:</strong> ${applicant.position}</li>
      <li><strong>Phone:</strong> ${applicant.phone}</li>
      <li><strong>Email:</strong> ${applicant.email}</li></ul>`,
-    config.storeName
+    config.storeName,
+    config.primaryColor,
+    config.accentColor
   );
 
   return sendEmail(ownerEmail, subject, html, text);
 }
 
 export async function sendApplicationReceivedEmail(applicant: Applicant) {
-  const config = await getStoreConfig();
+  const config = await getStoreConfig(applicant.companyId);
   const subject = `Application Received — ${config.storeName}`;
   const text = `Hi ${applicant.firstName},\n\nThank you for applying for ${applicant.position}. We have received your application and will review it shortly.\n\nBest regards,\n${config.storeName}`;
   const html = emailWrapper(
@@ -96,13 +98,15 @@ export async function sendApplicationReceivedEmail(applicant: Applicant) {
     `<p>Hi <strong>${applicant.firstName}</strong>,</p>
      <p>Thank you for applying for <strong>${applicant.position}</strong>. We have received your application and will review it shortly.</p>
      <p>We appreciate your interest in joining our team!</p>`,
-    config.storeName
+    config.storeName,
+    config.primaryColor,
+    config.accentColor
   );
   return sendEmail(applicant.email, subject, html, text);
 }
 
 export async function sendStatusChangeEmail(applicant: Applicant, status: string) {
-  const config = await getStoreConfig();
+  const config = await getStoreConfig(applicant.companyId);
   const templates: Record<string, { subject: string; title: string; body: string }> = {
     Reviewing: {
       subject: `Application Update — ${config.storeName}`,
@@ -130,7 +134,7 @@ export async function sendStatusChangeEmail(applicant: Applicant, status: string
   if (!template) return { sent: false, reason: 'No template for status' };
 
   const text = template.body.replace(/<[^>]+>/g, '');
-  const html = emailWrapper(template.title, template.body, config.storeName);
+  const html = emailWrapper(template.title, template.body, config.storeName, config.primaryColor, config.accentColor);
   return sendEmail(applicant.email, template.subject, html, text);
 }
 
@@ -139,6 +143,7 @@ export async function sendInterviewEmail(
   interview: Interview,
   storeName: string
 ) {
+  const config = await getStoreConfig(applicant.companyId);
   const date = new Date(interview.scheduledAt).toLocaleString('en-US', {
     weekday: 'long',
     month: 'long',
@@ -162,6 +167,6 @@ export async function sendInterviewEmail(
     <p>We look forward to meeting you!</p>`;
 
   const text = body.replace(/<[^>]+>/g, '');
-  const html = emailWrapper('Interview Scheduled', body, storeName);
+  const html = emailWrapper('Interview Scheduled', body, storeName, config.primaryColor, config.accentColor);
   return sendEmail(applicant.email, subject, html, text);
 }

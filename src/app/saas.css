@@ -889,6 +889,7 @@
 .ats-status-badge.draft { background: #fef3c7; color: #b45309; }
 .ats-status-badge.archived { background: #f1f5f9; color: #64748b; }
 .ats-status-badge.paused { background: #e0e7ff; color: #4338ca; }
+.ats-status-badge.filled { background: #dbeafe; color: #1d4ed8; }
 
 .impersonation-banner {
   position: fixed;

@@ -1,7 +1,7 @@
 {
   "name": "ups-store-hiring-portal",
   "version": "2.0.0",
-  "description": "UPS Store Hiring Portal - Next.js app for Vercel deployment",
+  "description": "HireHub — multi-tenant hiring platform for local businesses",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -10,6 +10,7 @@
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
+    "db:cleanup": "tsx prisma/cleanup.ts",
     "db:migrate-multitenant": "tsx prisma/pre-migrate.ts && prisma db push && tsx prisma/seed.ts",
     "db:studio": "prisma studio"
   },

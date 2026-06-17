@@ -144,7 +144,7 @@ model JobTemplate {
   company Company? @relation(fields: [companyId], references: [id])
 
   @@unique([companyId, name])
-  @@unique([industry, title])
+  @@unique([industry, title, isSystemTemplate, companyId])
   @@index([industry])
   @@index([companyId])
   @@map("job_templates")

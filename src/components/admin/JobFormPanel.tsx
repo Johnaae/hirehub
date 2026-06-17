@@ -52,7 +52,7 @@ const EMPTY_FORM: JobFormValues = {
   description: '',
   requirements: [],
   benefits: [],
-  status: 'Draft',
+  status: 'Open',
 };
 
 interface JobFormPanelProps {

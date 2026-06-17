@@ -103,7 +103,7 @@ function formatFieldLabel(field: string): string {
     authorizedToWork: 'Work Authorization',
     over18: 'Age Confirmation',
     customerServiceExperience: 'Customer Service Experience',
-    upsPrintShippingExperience: 'UPS/Retail Experience',
+    upsPrintShippingExperience: 'Retail/Shipping Experience',
     whyWorkHere: 'Why Work Here',
     certified: 'Certification',
     previousEmployer: 'Previous Employer',
@@ -335,7 +335,7 @@ export default function ApplicationForm({
         <YesNoField label="Are you legally authorized to work in the United States?" name="authorizedToWork" value={form.authorizedToWork} error={errors.authorizedToWork} onChange={(v) => updateField('authorizedToWork', v)} />
         <YesNoField label="Are you at least 18 years old?" name="over18" value={form.over18} error={errors.over18} onChange={(v) => updateField('over18', v)} />
         <YesNoField label="Previous customer service experience?" name="customerServiceExperience" value={form.customerServiceExperience} error={errors.customerServiceExperience} onChange={(v) => updateField('customerServiceExperience', v)} />
-        <YesNoField label="Previous UPS Store, shipping, printing, or retail experience?" name="upsPrintShippingExperience" value={form.upsPrintShippingExperience} error={errors.upsPrintShippingExperience} onChange={(v) => updateField('upsPrintShippingExperience', v)} />
+        <YesNoField label="Previous retail, shipping, printing, or customer service experience?" name="upsPrintShippingExperience" value={form.upsPrintShippingExperience} error={errors.upsPrintShippingExperience} onChange={(v) => updateField('upsPrintShippingExperience', v)} />
       </fieldset>
 
       <fieldset className="form-section">

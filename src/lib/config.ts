@@ -1,7 +1,6 @@
 import prisma from './prisma';
-import { DEFAULT_COMPANY_ID } from './company';
 
-export async function getStoreConfig(companyId: number = DEFAULT_COMPANY_ID) {
+export async function getStoreConfig(companyId: number) {
   try {
     const company = await prisma.company.findUnique({
       where: { id: companyId },
@@ -15,7 +14,7 @@ export async function getStoreConfig(companyId: number = DEFAULT_COMPANY_ID) {
         storeAddress: company.address || '',
         storePhone: company.phone || '',
         storeWebsite: company.website || '',
-        ownerEmail: company.ownerEmail || company.email || process.env.OWNER_EMAIL || '',
+        ownerEmail: company.settings?.ownerEmail || company.ownerEmail || company.email || '',
         primaryColor: company.primaryColor,
         accentColor: company.accentColor,
         heroTitle: company.careerPageBanner || `Join ${company.name}`,

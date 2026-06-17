@@ -21,6 +21,8 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: 'System templates cannot be deleted' }, { status: 403 });
   }
 
-  await prisma.jobTemplate.delete({ where: { id: templateId } });
+  await prisma.jobTemplate.delete({
+    where: { id: templateId, companyId, isSystemTemplate: false },
+  });
   return NextResponse.json({ message: 'Template deleted' });
 }

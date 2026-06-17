@@ -4,7 +4,7 @@ import { applicationSchema, parseDateForDb } from '@/lib/validation';
 import { sendNewApplicationEmail, sendApplicationReceivedEmail } from '@/lib/email';
 import { logActivity } from '@/lib/activity';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
-import { DEFAULT_COMPANY_ID, getCompanyBySlug } from '@/lib/company';
+import { getCompanyByCareerRef } from '@/lib/company';
 
 async function resolveCompanyId(
   jobId: number | null,
@@ -13,23 +13,31 @@ async function resolveCompanyId(
   if (jobId && !isNaN(jobId)) {
     const job = await prisma.job.findUnique({
       where: { id: jobId },
-      select: { companyId: true },
+      select: { companyId: true, status: true },
     });
     if (!job) {
       return { error: NextResponse.json({ error: 'Job not found' }, { status: 404 }) };
+    }
+    if (job.status !== 'Open') {
+      return { error: NextResponse.json({ error: 'This position is not accepting applications' }, { status: 400 }) };
     }
     return { companyId: job.companyId };
   }
 
   if (companySlug) {
-    const company = await getCompanyBySlug(companySlug);
-    if (!company) {
+    const company = await getCompanyByCareerRef(companySlug);
+    if (!company || company.status === 'suspended') {
       return { error: NextResponse.json({ error: 'Company not found' }, { status: 404 }) };
     }
     return { companyId: company.id };
   }
 
-  return { companyId: DEFAULT_COMPANY_ID };
+  return {
+    error: NextResponse.json(
+      { error: 'A job or company is required to submit an application' },
+      { status: 400 }
+    ),
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -93,7 +101,7 @@ export async function POST(request: NextRequest) {
 
     if (jobId && !isNaN(jobId)) {
       const job = await prisma.job.findFirst({
-        where: { id: jobId, companyId },
+        where: { id: jobId, companyId, status: 'Open' },
       });
       if (!job) {
         return NextResponse.json({ error: 'Job not found for this company' }, { status: 400 });
