@@ -12,6 +12,7 @@ interface PasswordInputProps {
   minLength?: number;
   autoComplete?: string;
   className?: string;
+  disabled?: boolean;
 }
 
 export default function PasswordInput({
@@ -23,6 +24,7 @@ export default function PasswordInput({
   minLength,
   autoComplete,
   className,
+  disabled,
 }: PasswordInputProps) {
   const [visible, setVisible] = useState(false);
 
@@ -37,6 +39,7 @@ export default function PasswordInput({
         required={required}
         minLength={minLength}
         autoComplete={autoComplete}
+        disabled={disabled}
       />
       <button
         type="button"
@@ -44,6 +47,7 @@ export default function PasswordInput({
         onClick={() => setVisible(!visible)}
         aria-label={visible ? 'Hide password' : 'Show password'}
         tabIndex={-1}
+        disabled={disabled}
       >
         {visible ? <EyeOff size={18} /> : <Eye size={18} />}
       </button>
