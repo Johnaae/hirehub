@@ -140,9 +140,17 @@ export default function ApplicantDetailPage() {
       }),
     });
     if (res.ok) {
-      toast.success('Interview scheduled and email sent');
+      const data = await res.json();
       setShowInterview(false);
-      handleStatusChange('Interview');
+      setApplicant((prev) => (prev ? { ...prev, status: 'Interview' } : prev));
+      if (data.email?.sent) {
+        toast.success('Interview scheduled and email sent');
+      } else if (data.email?.emailStatus === 'not_configured') {
+        toast.success('Interview scheduled (email not configured)');
+      } else {
+        toast.success('Interview scheduled');
+        toast.error(data.email?.reason || 'Failed to send interview email');
+      }
     } else {
       toast.error('Failed to schedule interview');
     }

@@ -140,8 +140,11 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    sendNewApplicationEmail(applicant).catch(console.error);
-    sendApplicationReceivedEmail(applicant).catch(console.error);
+    const [ownerEmailResult, applicantEmailResult] = await Promise.all([
+      sendNewApplicationEmail(applicant),
+      sendApplicationReceivedEmail(applicant),
+    ]);
+
     logActivity({
       action: 'New Application',
       details: `${applicant.firstName} ${applicant.lastName} applied for ${applicant.position}`,
@@ -149,8 +152,24 @@ export async function POST(request: NextRequest) {
       companyId,
     }).catch(console.error);
 
+    const emailStatus =
+      ownerEmailResult.emailStatus === 'sent' && applicantEmailResult.emailStatus === 'sent'
+        ? 'sent'
+        : ownerEmailResult.emailStatus === 'not_configured' &&
+            applicantEmailResult.emailStatus === 'not_configured'
+          ? 'not_configured'
+          : 'failed';
+
     return NextResponse.json(
-      { message: 'Application submitted successfully', id: applicant.id },
+      {
+        message: 'Application submitted successfully',
+        id: applicant.id,
+        emailStatus,
+        emails: {
+          owner: ownerEmailResult,
+          applicant: applicantEmailResult,
+        },
+      },
       { status: 201 }
     );
   } catch (err) {

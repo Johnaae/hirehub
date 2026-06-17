@@ -4,7 +4,6 @@ import { requireActiveTenant } from '@/lib/auth';
 import { tenantWhere, tenantWhereId, notFound } from '@/lib/tenant';
 import { sendInterviewEmail, sendStatusChangeEmail } from '@/lib/email';
 import { logActivity } from '@/lib/activity';
-import { getStoreConfig } from '@/lib/config';
 import { z } from 'zod';
 
 const interviewSchema = z.object({
@@ -76,9 +75,15 @@ export async function POST(request: NextRequest) {
     companyId,
   });
 
-  const config = await getStoreConfig(companyId);
-  sendInterviewEmail(applicant, interview, config.storeName).catch(console.error);
-  sendStatusChangeEmail(applicant, 'Interview').catch(console.error);
+  const interviewEmail = await sendInterviewEmail(applicant, interview);
+  const statusEmail = await sendStatusChangeEmail(applicant, 'Interview');
 
-  return NextResponse.json({ interview }, { status: 201 });
+  return NextResponse.json(
+    {
+      interview,
+      email: interviewEmail,
+      statusEmail,
+    },
+    { status: 201 }
+  );
 }

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Building2, Users, Briefcase, Plus, Eye, Ban, Trash2, LogOut } from 'lucide-react';
+import { Building2, Users, Briefcase, Plus, Eye, Ban, Trash2, LogOut, Mail, Send, CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import PasswordInput from '@/components/PasswordInput';
 import { getCompanyCareerPath } from '@/lib/company-career';
@@ -32,6 +32,11 @@ export default function SuperAdminPage() {
     industry: 'RETAIL' as CompanyIndustry,
     logoUrl: '', primaryColor: '#351C15', accentColor: '#FFB500', timezone: 'America/New_York',
   });
+  const [emailConfigured, setEmailConfigured] = useState(false);
+  const [platformFromEmail, setPlatformFromEmail] = useState<string | null>(null);
+  const [testEmailTo, setTestEmailTo] = useState('');
+  const [testCompanyName, setTestCompanyName] = useState('HireHub Demo Company');
+  const [testingEmail, setTestingEmail] = useState(false);
 
   const load = () =>
     fetch('/api/super-admin/companies')
@@ -39,7 +44,15 @@ export default function SuperAdminPage() {
       .then((d) => setCompanies(d.companies || []))
       .finally(() => setLoading(false));
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    fetch('/api/super-admin/email')
+      .then((r) => r.json())
+      .then((d) => {
+        setEmailConfigured(!!d.emailConfigured);
+        setPlatformFromEmail(d.fromEmail || null);
+      });
+  }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,6 +115,31 @@ export default function SuperAdminPage() {
     router.push('/super-admin/login');
   };
 
+  const handleTestEmail = async () => {
+    if (!testEmailTo.trim()) {
+      toast.error('Enter a recipient email address');
+      return;
+    }
+    setTestingEmail(true);
+    const res = await fetch('/api/super-admin/email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: testEmailTo.trim(),
+        sampleCompanyName: testCompanyName.trim() || 'HireHub Demo Company',
+      }),
+    });
+    const data = await res.json();
+    if (data.sent) {
+      toast.success(`Test email sent to ${data.to}`);
+    } else if (data.emailStatus === 'not_configured') {
+      toast.error('Shared SMTP not configured — set DEFAULT_SMTP_* env variables');
+    } else {
+      toast.error(data.reason || 'Failed to send test email');
+    }
+    setTestingEmail(false);
+  };
+
   return (
     <div className="saas-page super-admin-page">
       <div className="saas-page-header">
@@ -131,6 +169,52 @@ export default function SuperAdminPage() {
         <div className="ats-stat-card">
           <span className="ats-stat-value">{companies.reduce((s, c) => s + c.stats.applicants, 0)}</span>
           <span className="ats-stat-label">Total Applicants</span>
+        </div>
+      </div>
+
+      <div className="saas-card settings-card" style={{ marginBottom: '1.5rem' }}>
+        <div className="settings-card-header">
+          <Mail size={20} />
+          <div>
+            <h3>Shared Email (HireHub SMTP)</h3>
+            <p>One notification account sends email for all companies — configured via environment variables</p>
+          </div>
+        </div>
+        <div className={`settings-info-banner ${emailConfigured ? 'success' : ''}`}>
+          {emailConfigured ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
+          <span>
+            <strong>{emailConfigured ? 'Email configured' : 'Email not configured'}</strong>
+            {emailConfigured && platformFromEmail
+              ? ` — From: {Company Name} via HireHub <${platformFromEmail}>`
+              : ' — Set DEFAULT_SMTP_HOST, DEFAULT_SMTP_PORT, DEFAULT_SMTP_USER, DEFAULT_SMTP_PASS, and DEFAULT_FROM_EMAIL in Vercel.'}
+          </span>
+        </div>
+        <div className="saas-form-row email-test-row">
+          <div className="saas-form-group">
+            <label>Sample company name</label>
+            <input
+              value={testCompanyName}
+              onChange={(e) => setTestCompanyName(e.target.value)}
+              placeholder="The UPS Store"
+            />
+          </div>
+          <div className="saas-form-group" style={{ flex: 1 }}>
+            <label>Test recipient</label>
+            <input
+              type="email"
+              value={testEmailTo}
+              onChange={(e) => setTestEmailTo(e.target.value)}
+              placeholder="you@example.com"
+            />
+          </div>
+          <button
+            type="button"
+            className="saas-btn saas-btn-primary"
+            onClick={handleTestEmail}
+            disabled={testingEmail}
+          >
+            <Send size={16} /> {testingEmail ? 'Sending...' : 'Send test email'}
+          </button>
         </div>
       </div>
 

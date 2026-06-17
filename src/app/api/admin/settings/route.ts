@@ -5,6 +5,7 @@ import { notFound } from '@/lib/tenant';
 import { validateCompanySlug } from '@/lib/company';
 import { isValidIndustry, type CompanyIndustry } from '@/lib/industry';
 import { syncCompanyJobLookups } from '@/lib/job-seed';
+import { sanitizeCompanyResponse } from '@/lib/email-settings';
 
 export async function GET() {
   const auth = await requireActiveTenant();
@@ -18,7 +19,7 @@ export async function GET() {
 
   if (!company) return notFound('Company not found');
 
-  return NextResponse.json({ company });
+  return NextResponse.json({ company: sanitizeCompanyResponse(company) });
 }
 
 export async function PATCH(request: Request) {
@@ -77,21 +78,14 @@ export async function PATCH(request: Request) {
   });
 
   if (body.settings) {
-    const settingsData = {
-      smtpHost: body.settings.smtpHost,
-      smtpPort: body.settings.smtpPort ? parseInt(body.settings.smtpPort, 10) : null,
-      smtpUser: body.settings.smtpUser,
-      smtpPass: body.settings.smtpPass,
+    const settingsData: Record<string, unknown> = {
       uploadProvider: body.settings.uploadProvider || 'uploadthing',
       ...(body.settings.ownerEmail !== undefined && { ownerEmail: body.settings.ownerEmail }),
     };
 
     await prisma.companySettings.upsert({
       where: { companyId },
-      create: {
-        companyId,
-        ...settingsData,
-      },
+      create: { companyId, ...settingsData },
       update: settingsData,
     });
   }
@@ -104,5 +98,10 @@ export async function PATCH(request: Request) {
     await syncCompanyJobLookups(companyId, company.industry as CompanyIndustry);
   }
 
-  return NextResponse.json({ company });
+  const refreshed = await prisma.company.findUnique({
+    where: { id: companyId },
+    include: { settings: true },
+  });
+
+  return NextResponse.json({ company: sanitizeCompanyResponse(refreshed!) });
 }

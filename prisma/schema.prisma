@@ -48,10 +48,13 @@ model Company {
 model CompanySettings {
   id             Int     @id @default(autoincrement())
   companyId      Int     @unique @map("company_id")
+  smtpFromName   String? @map("smtp_from_name")
+  smtpFromEmail  String? @map("smtp_from_email")
   smtpHost       String? @map("smtp_host")
   smtpPort       Int?    @map("smtp_port")
   smtpUser       String? @map("smtp_user")
   smtpPass       String? @map("smtp_pass")
+  smtpSecure     Boolean @default(false) @map("smtp_secure")
   ownerEmail     String? @map("owner_email")
   uploadProvider String  @default("uploadthing") @map("upload_provider")
   sessionTimeout Int     @default(480) @map("session_timeout")

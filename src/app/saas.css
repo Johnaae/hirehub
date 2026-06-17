@@ -1527,6 +1527,33 @@
   margin-bottom: 1rem;
 }
 
+.settings-info-banner.success {
+  background: color-mix(in srgb, #16a34a 8%, var(--bg-card));
+  border-color: color-mix(in srgb, #16a34a 25%, var(--border));
+  color: #15803d;
+}
+
+.email-test-row {
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.email-test-row .saas-btn {
+  margin-bottom: 0.25rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.checkbox-label input {
+  width: auto;
+}
+
 .settings-inline-link {
   background: none;
   border: none;

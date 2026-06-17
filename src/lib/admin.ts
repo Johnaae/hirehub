@@ -24,10 +24,6 @@ export async function ensureDefaultCompany() {
         settings: {
           create: {
             ownerEmail: process.env.OWNER_EMAIL || null,
-            smtpHost: process.env.SMTP_HOST || null,
-            smtpPort: process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : null,
-            smtpUser: process.env.SMTP_USER || null,
-            smtpPass: process.env.SMTP_PASS || null,
           },
         },
       },

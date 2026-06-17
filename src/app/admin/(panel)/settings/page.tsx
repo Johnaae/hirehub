@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Save, Building2, Palette, Mail, ShieldCheck, Copy, ExternalLink } from 'lucide-react';
+import { Save, Building2, Palette, Mail, ShieldCheck, Copy, ExternalLink, CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import AccountSecuritySection from '@/components/admin/settings/AccountSecuritySection';
 import { getCompanyCareerPath, getCompanyCareerUrl, type CompanyCareerRef } from '@/lib/company-career';
@@ -22,13 +22,14 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('company');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [sharedEmailConfigured, setSharedEmailConfigured] = useState(false);
   const [companyId, setCompanyId] = useState(0);
   const [form, setForm] = useState({
     name: '', slug: '', industry: 'SHIPPING_RETAIL' as CompanyIndustry, address: '', phone: '', email: '', website: '', description: '',
     careerPageBanner: '',
     logoUrl: '', primaryColor: '#351C15', accentColor: '#FFB500',
     settings: {
-      smtpHost: '', smtpPort: '587', smtpUser: '', smtpPass: '', uploadProvider: 'uploadthing',
+      uploadProvider: 'uploadthing',
     },
   });
 
@@ -62,13 +63,10 @@ export default function SettingsPage() {
             primaryColor: d.company.primaryColor || '#351C15',
             accentColor: d.company.accentColor || '#FFB500',
             settings: {
-              smtpHost: d.company.settings?.smtpHost || '',
-              smtpPort: String(d.company.settings?.smtpPort || '587'),
-              smtpUser: d.company.settings?.smtpUser || '',
-              smtpPass: d.company.settings?.smtpPass || '',
               uploadProvider: d.company.settings?.uploadProvider || 'uploadthing',
             },
           });
+          setSharedEmailConfigured(!!d.company.settings?.sharedSmtpConfigured);
         }
       })
       .finally(() => setLoading(false));
@@ -94,7 +92,12 @@ export default function SettingsPage() {
           slug: data.company.slug || prev.slug,
           name: data.company.name || prev.name,
           industry: data.company.industry || prev.industry,
+          settings: {
+            ...prev.settings,
+            uploadProvider: data.company.settings?.uploadProvider || prev.settings.uploadProvider,
+          },
         }));
+        setSharedEmailConfigured(!!data.company.settings?.sharedSmtpConfigured);
         window.dispatchEvent(new CustomEvent(COMPANY_UPDATED_EVENT, { detail: data.company }));
       }
     } else {
@@ -276,56 +279,34 @@ export default function SettingsPage() {
                 <div className="settings-card-header">
                   <Mail size={20} />
                   <div>
-                    <h3>SMTP Configuration</h3>
-                    <p>Outgoing email server for applicant and system notifications</p>
+                    <h3>Email Notifications</h3>
+                    <p>Applicant and interview emails are sent through HireHub&apos;s shared notification service</p>
                   </div>
                 </div>
+
+                <div className={`settings-info-banner ${sharedEmailConfigured ? 'success' : ''}`}>
+                  {sharedEmailConfigured ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
+                  <span>
+                    <strong>{sharedEmailConfigured ? 'Email configured' : 'Email not configured'}</strong>
+                    {sharedEmailConfigured
+                      ? ` — emails are sent as "${form.name || 'Your Company'} via HireHub". Applicant replies go to your company email.`
+                      : ' — platform SMTP is not configured yet. Contact your HireHub administrator.'}
+                  </span>
+                </div>
+
                 <div className="settings-info-banner">
                   <ShieldCheck size={16} />
                   <span>
-                    Set your <strong>notification email</strong> in the{' '}
+                    Set your <strong>Company Email</strong> in the Company tab so applicant replies reach your business.
+                    Set your <strong>notification email</strong> in{' '}
                     <button type="button" className="settings-inline-link" onClick={() => setActiveTab('account')}>
                       Account & Security
                     </button>{' '}
-                    tab to receive new applicant and interview alerts.
+                    to receive new applicant alerts.
                   </span>
                 </div>
-                <div className="saas-form-row">
-                  <div className="saas-form-group">
-                    <label>SMTP Host</label>
-                    <input
-                      value={form.settings.smtpHost}
-                      onChange={(e) => setForm({ ...form, settings: { ...form.settings, smtpHost: e.target.value } })}
-                      placeholder="smtp.gmail.com"
-                    />
-                  </div>
-                  <div className="saas-form-group">
-                    <label>SMTP Port</label>
-                    <input
-                      value={form.settings.smtpPort}
-                      onChange={(e) => setForm({ ...form, settings: { ...form.settings, smtpPort: e.target.value } })}
-                    />
-                  </div>
-                </div>
-                <div className="saas-form-row">
-                  <div className="saas-form-group">
-                    <label>SMTP User</label>
-                    <input
-                      value={form.settings.smtpUser}
-                      onChange={(e) => setForm({ ...form, settings: { ...form.settings, smtpUser: e.target.value } })}
-                    />
-                  </div>
-                  <div className="saas-form-group">
-                    <label>SMTP Password</label>
-                    <input
-                      type="password"
-                      value={form.settings.smtpPass}
-                      onChange={(e) => setForm({ ...form, settings: { ...form.settings, smtpPass: e.target.value } })}
-                      autoComplete="new-password"
-                    />
-                  </div>
-                </div>
               </div>
+
               <div className="saas-card settings-card">
                 <h3>File Storage</h3>
                 <div className="saas-form-group">

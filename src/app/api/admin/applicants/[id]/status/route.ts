@@ -36,6 +36,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       data: { status: parsed.data.status },
     });
 
+    let emailResult = null;
     if (previous.status !== parsed.data.status) {
       await logActivity({
         action: 'Status Changed',
@@ -44,10 +45,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         adminId: session.id,
         companyId,
       });
-      sendStatusChangeEmail(applicant, parsed.data.status).catch(console.error);
+      emailResult = await sendStatusChangeEmail(applicant, parsed.data.status);
     }
 
-    return NextResponse.json({ applicant });
+    return NextResponse.json({ applicant, email: emailResult });
   } catch (err) {
     console.error('Update status error:', err);
     return NextResponse.json({ error: 'Failed to update status' }, { status: 500 });
