@@ -1,9 +1,9 @@
 import prisma from '../src/lib/prisma';
 import { ensureDefaultAdmin, ensureDefaultCompany, ensureSuperAdmin } from '../src/lib/admin';
 import {
-  ensureJobLookups,
-  ensureSystemJobTemplates,
   ensureCompanyIndustries,
+  ensureSystemJobTemplates,
+  resyncAllCompanyJobLookups,
 } from '../src/lib/job-seed';
 
 async function main() {
@@ -12,8 +12,8 @@ async function main() {
   await ensureDefaultAdmin();
   await ensureSuperAdmin();
   await ensureCompanyIndustries();
-  await ensureJobLookups(1);
   await ensureSystemJobTemplates();
+  await resyncAllCompanyJobLookups();
   console.log('Seed complete.');
 }
 

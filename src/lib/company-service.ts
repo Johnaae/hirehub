@@ -1,9 +1,8 @@
 import prisma from './prisma';
 import { slugify } from './company';
 import { hashPassword } from './auth';
-import { ensureJobLookups } from './job-seed';
-import type { CompanyIndustry } from './industry';
-import { isValidIndustry } from './industry';
+import { syncCompanyJobLookups } from './job-seed';
+import { isValidIndustry, type CompanyIndustry } from './industry';
 import type { AdminRole } from './tenant';
 
 export interface CreateCompanyInput {
@@ -64,7 +63,7 @@ export async function createCompanyWithOwner(input: CreateCompanyInput) {
     include: { admins: true, settings: true },
   });
 
-  await ensureJobLookups(company.id);
+  await syncCompanyJobLookups(company.id, industry);
 
   return company;
 }

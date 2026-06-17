@@ -3,7 +3,8 @@ import prisma from '@/lib/prisma';
 import { requireActiveTenant } from '@/lib/auth';
 import { notFound } from '@/lib/tenant';
 import { slugify } from '@/lib/company';
-import { isValidIndustry } from '@/lib/industry';
+import { isValidIndustry, type CompanyIndustry } from '@/lib/industry';
+import { syncCompanyJobLookups } from '@/lib/job-seed';
 
 export async function GET() {
   const auth = await requireActiveTenant();
@@ -61,6 +62,11 @@ export async function PATCH(request: Request) {
     updateData.slug = newSlug;
   }
 
+  const previous = await prisma.company.findUnique({
+    where: { id: companyId },
+    select: { industry: true },
+  });
+
   const company = await prisma.company.update({
     where: { id: companyId },
     data: updateData,
@@ -85,6 +91,14 @@ export async function PATCH(request: Request) {
       },
       update: settingsData,
     });
+  }
+
+  if (
+    body.industry !== undefined &&
+    previous &&
+    previous.industry !== company.industry
+  ) {
+    await syncCompanyJobLookups(companyId, company.industry as CompanyIndustry);
   }
 
   return NextResponse.json({ company });

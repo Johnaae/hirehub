@@ -10,6 +10,14 @@ export async function GET() {
   if ('error' in auth) return auth.error;
   const { companyId } = auth;
 
+  const company = await prisma.company.findUnique({
+    where: { id: companyId },
+    select: { industry: true },
+  });
+  if (!company) {
+    return NextResponse.json({ error: 'Company not found' }, { status: 404 });
+  }
+
   const options = await prisma.jobLookupOption.findMany({
     where: tenantWhere(companyId),
     orderBy: [{ category: 'asc' }, { sortOrder: 'asc' }],
@@ -22,7 +30,7 @@ export async function GET() {
     grouped[opt.category].push(opt.value);
   }
 
-  return NextResponse.json({ lookups: grouped });
+  return NextResponse.json({ lookups: grouped, industry: company.industry });
 }
 
 const addSchema = z.object({
