@@ -1,7 +1,6 @@
 import { jsPDF } from 'jspdf';
 import type { CompanyCareerRef } from './company-career';
 import { getCompanyQrCareerUrl, getShortCareerDisplayUrl } from './company-career';
-import { getProductionOrigin } from './app-url';
 import { generateQrPngBuffer } from './qr-code';
 
 export interface PosterJob {
@@ -33,9 +32,8 @@ export async function generateHiringPosterPdf(
   companyRef: CompanyCareerRef,
   jobs: PosterJob[]
 ): Promise<Buffer> {
-  const origin = getProductionOrigin();
-  const qrUrl = getCompanyQrCareerUrl(companyRef, origin);
-  const shortUrl = getShortCareerDisplayUrl(companyRef, origin);
+  const qrUrl = getCompanyQrCareerUrl(companyRef);
+  const shortUrl = getShortCareerDisplayUrl(companyRef);
   const qrBuffer = await generateQrPngBuffer(qrUrl);
   const qrDataUrl = `data:image/png;base64,${qrBuffer.toString('base64')}`;
 

@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
-import { getCompanyApplyPath, type CompanyCareerRef } from '@/lib/company-career';
+import { getCompanyApplyUrl, type CompanyCareerRef } from '@/lib/company-career';
 
 export interface JobCardData {
   id: number;
@@ -56,7 +56,7 @@ export default function JobCard({
   const [menuOpen, setMenuOpen] = useState(false);
 
   const publicApplyUrl =
-    companyRef && companyRef.id ? getCompanyApplyPath(companyRef, job.id) : null;
+    companyRef && companyRef.id ? getCompanyApplyUrl(companyRef, job.id) : null;
 
   const fmt = (d?: string) =>
     d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';

@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCompanyCareerPath, type CompanyCareerRef } from '@/lib/company-career';
+import { getCompanyCareerUrl, type CompanyCareerRef } from '@/lib/company-career';
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
@@ -47,7 +47,7 @@ export default function AdminSidebar({
   const [dark, setDark] = useState(false);
   const [searchQ, setSearchQ] = useState('');
 
-  const publicSiteHref = companyRef ? getCompanyCareerPath(companyRef) : null;
+  const publicSiteHref = companyRef?.id ? getCompanyCareerUrl(companyRef) : null;
 
   useEffect(() => {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';

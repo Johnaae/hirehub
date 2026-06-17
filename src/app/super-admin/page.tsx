@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Building2, Users, Briefcase, Plus, Eye, Ban, Trash2, LogOut, Mail, Send, CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import PasswordInput from '@/components/PasswordInput';
-import { getCompanyCareerPath } from '@/lib/company-career';
+import { getCompanyCareerUrl } from '@/lib/company-career';
 import { COMPANY_INDUSTRIES, INDUSTRY_LABELS, type CompanyIndustry } from '@/lib/industry';
 
 interface CompanyRow {
@@ -298,9 +298,14 @@ export default function SuperAdminPage() {
                   <td>{c.stats.applicants}</td>
                   <td>{c.stats.jobs}</td>
                   <td>
-                    <Link href={getCompanyCareerPath({ id: c.id, slug: c.slug })} target="_blank" className="saas-link">
-                      {getCompanyCareerPath({ id: c.id, slug: c.slug })}
-                    </Link>
+                    {(() => {
+                      const careerUrl = getCompanyCareerUrl({ id: c.id, slug: c.slug });
+                      return (
+                        <Link href={careerUrl} target="_blank" rel="noopener noreferrer" className="saas-link">
+                          {careerUrl}
+                        </Link>
+                      );
+                    })()}
                   </td>
                   <td>
                     <div className="super-admin-actions">

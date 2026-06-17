@@ -1,3 +1,5 @@
+import { getPublicAppOrigin } from './app-url';
+
 export interface CompanyCareerRef {
   slug?: string | null;
   id: number;
@@ -18,35 +20,42 @@ export function getCompanyApplyPath(company: CompanyCareerRef, jobId: number): s
   return `${getCompanyCareerPath(company)}/apply/${jobId}`;
 }
 
-/**
- * Full career page URL. Pass `origin` on the server; on the client uses window.location.origin.
- */
-export function getCompanyCareerUrl(company: CompanyCareerRef, origin?: string): string {
-  const path = getCompanyCareerPath(company);
-  if (origin) return `${origin.replace(/\/$/, '')}${path}`;
-  if (typeof window !== 'undefined') return `${window.location.origin}${path}`;
-  return path;
+function withPublicOrigin(path: string): string {
+  const origin = getPublicAppOrigin();
+  return origin ? `${origin}${path}` : path;
+}
+
+/** Full public career page URL (production domain when configured). */
+export function getCompanyCareerUrl(company: CompanyCareerRef): string {
+  return withPublicOrigin(getCompanyCareerPath(company));
 }
 
 export function getCompanyQrCareerPath(company: CompanyCareerRef): string {
   return `${getCompanyCareerPath(company)}?source=qr`;
 }
 
-export function getCompanyQrCareerUrl(company: CompanyCareerRef, origin?: string): string {
-  const base = origin
-    ? `${origin.replace(/\/$/, '')}${getCompanyCareerPath(company)}`
-    : getCompanyCareerUrl(company, origin);
-  return `${base}?source=qr`;
+/** Full public QR career URL: ${NEXT_PUBLIC_APP_URL}/careers/${slug}?source=qr */
+export function getCompanyQrCareerUrl(company: CompanyCareerRef): string {
+  return withPublicOrigin(getCompanyQrCareerPath(company));
 }
 
-export function getShortCareerDisplayUrl(company: CompanyCareerRef, origin: string): string {
+/** Full public job apply URL. */
+export function getCompanyApplyUrl(company: CompanyCareerRef, jobId: number): string {
+  return withPublicOrigin(getCompanyApplyPath(company, jobId));
+}
+
+export function getShortCareerDisplayUrl(company: CompanyCareerRef): string {
   const segment = getCompanyCareerSegment(company);
-  try {
-    const host = new URL(origin).host;
-    return `${host}/careers/${segment}`;
-  } catch {
-    return `/careers/${segment}`;
+  const origin = getPublicAppOrigin();
+  if (origin) {
+    try {
+      const host = new URL(origin).host;
+      return `${host}/careers/${segment}`;
+    } catch {
+      // fall through
+    }
   }
+  return `/careers/${segment}`;
 }
 
 export function isValidCompanySlugFormat(slug: string): boolean {

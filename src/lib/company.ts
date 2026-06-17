@@ -1,7 +1,14 @@
 import prisma from './prisma';
 import { isValidCompanySlugFormat } from './company-career';
 
-export { getCompanyCareerPath, getCompanyCareerUrl, getCompanyApplyPath, isValidCompanySlugFormat } from './company-career';
+export {
+  getCompanyCareerPath,
+  getCompanyCareerUrl,
+  getCompanyApplyPath,
+  getCompanyApplyUrl,
+  getCompanyQrCareerUrl,
+  isValidCompanySlugFormat,
+} from './company-career';
 export type { CompanyCareerRef } from './company-career';
 
 export async function getCompanyByCareerRef(ref: string) {

@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { requireActiveTenant } from '@/lib/auth';
 import { notFound } from '@/lib/tenant';
-import { getProductionOrigin } from '@/lib/app-url';
 import {
   getCompanyQrCareerUrl,
   getShortCareerDisplayUrl,
@@ -23,9 +22,8 @@ export async function GET() {
   if (!company) return notFound('Company not found');
 
   const companyRef: CompanyCareerRef = { id: company.id, slug: company.slug };
-  const origin = getProductionOrigin();
-  const careerUrl = getCompanyQrCareerUrl(companyRef, origin);
-  const shortUrl = getShortCareerDisplayUrl(companyRef, origin);
+  const careerUrl = getCompanyQrCareerUrl(companyRef);
+  const shortUrl = getShortCareerDisplayUrl(companyRef);
 
   const jobs = await prisma.job.findMany({
     where: { companyId, status: 'Open' },

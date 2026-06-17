@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import AdminSidebar from './AdminSidebar';
 import { Toaster, toast } from 'sonner';
-import { getCompanyCareerPath, type CompanyCareerRef } from '@/lib/company-career';
+import type { CompanyCareerRef } from '@/lib/company-career';
 
 export const COMPANY_UPDATED_EVENT = 'hirehub:company-updated';
 

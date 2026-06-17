@@ -170,14 +170,14 @@ export default function SettingsPage() {
                 />
                 <span className="field-hint">Used in your career page URL: {careerPath || '/careers/your-slug'}</span>
               </div>
-              {careerPath && (
+              {careerUrl && (
                 <div className="career-url-copy">
                   <ExternalLink size={16} />
-                  <code>{careerPath}</code>
+                  <code>{careerUrl}</code>
                   <button type="button" className="saas-btn saas-btn-sm saas-btn-outline" onClick={copyCareerUrl}>
                     <Copy size={14} /> Copy link
                   </button>
-                  <Link href={careerPath} target="_blank" className="saas-link">Preview</Link>
+                  <Link href={careerUrl} target="_blank" rel="noopener noreferrer" className="saas-link">Preview</Link>
                 </div>
               )}
               <div className="saas-form-group">
