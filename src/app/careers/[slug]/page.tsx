@@ -163,7 +163,7 @@ function CareersPageContent() {
 
       <footer className="footer">
         <div className="container">
-          <p>{company.footer || `© ${new Date().getFullYear()} ${company.storeName}. All rights reserved.`}</p>
+          <p>{company.footer || `© ${company.storeName}. All rights reserved.`}</p>
         </div>
       </footer>
     </div>
