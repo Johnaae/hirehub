@@ -17,6 +17,9 @@
   --border: #e2e8f0;
   --text: #1e293b;
   --text-muted: #64748b;
+  --accent-soft: color-mix(in srgb, var(--accent) 10%, transparent);
+  --surface-raised: #ffffff;
+  --radius-xl: 18px;
 }
 
 /* Admin Layout */
