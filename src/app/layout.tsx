@@ -17,7 +17,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <head>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <style>{`:root { --primary: #1e3a5f; --accent: #3b82f6; }`}</style>
       </head>
       <body className={inter.className}>
         <ConfigProvider>{children}</ConfigProvider>
