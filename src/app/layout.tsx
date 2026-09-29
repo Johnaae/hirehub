@@ -10,14 +10,14 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 export const metadata: Metadata = {
   title: 'HireHub — Hiring portals for local businesses',
   description: 'HireHub gives every business its own branded careers page and applicant tracking.',
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <head>
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-      </head>
       <body className={inter.className}>
         <ConfigProvider>{children}</ConfigProvider>
       </body>
