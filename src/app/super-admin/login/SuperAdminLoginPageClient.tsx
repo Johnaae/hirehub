@@ -27,6 +27,7 @@ export default function SuperAdminLoginPageClient() {
     fetch('/api/super-admin/session')
       .then((r) => r.json())
       .then((d) => setSession(d))
+      .catch(() => setSession(null))
       .finally(() => setCheckingSession(false));
   }, []);
 

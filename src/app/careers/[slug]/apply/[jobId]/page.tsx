@@ -75,6 +75,7 @@ function CareerApplyContent() {
           setNotFoundState(true);
         }
       })
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, [slug, jobId]);
 

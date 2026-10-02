@@ -35,6 +35,7 @@ export default function QrCodeMarketingPage() {
     fetch('/api/admin/marketing/qr')
       .then((r) => r.json())
       .then((d) => setData(d))
+      .catch(() => setData(null))
       .finally(() => setLoading(false));
   }, []);
 

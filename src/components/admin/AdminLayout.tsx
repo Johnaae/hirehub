@@ -30,7 +30,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             setImpersonating({ name: d.company.name, slug: d.company.slug });
           }
         }
-      });
+      })
+      .catch(() => {});
 
     const onCompanyUpdated = (e: Event) => {
       const detail = (e as CustomEvent).detail as { id: number; slug?: string; name?: string };

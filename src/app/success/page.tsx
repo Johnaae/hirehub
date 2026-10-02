@@ -22,7 +22,8 @@ function SuccessContent() {
           if (d.company?.accentColor) {
             document.documentElement.style.setProperty('--accent', d.company.accentColor);
           }
-        });
+        })
+        .catch(() => {});
     }
   }, [companySlug]);
 

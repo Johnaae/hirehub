@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { ArrowRight, BarChart3, Building2, Check, LogIn, Sparkles, Users } from 'lucide-react';
 
-const CURRENT_YEAR = 2026;
+const CURRENT_YEAR = new Date().getFullYear();
 
 const capabilities = [
   { icon: Building2, eyebrow: 'Brand', title: 'Career pages that feel like you', copy: 'Give every location a polished, on-brand destination for the people you want to hire.' },

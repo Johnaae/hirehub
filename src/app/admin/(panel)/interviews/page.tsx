@@ -21,6 +21,7 @@ export default function InterviewsPage() {
     fetch('/api/admin/interviews')
       .then((r) => r.json())
       .then((d) => setInterviews(d.interviews || []))
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
