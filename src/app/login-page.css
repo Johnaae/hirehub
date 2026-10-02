@@ -435,16 +435,65 @@ body:has(.login-page--loading) {
 /* ─── Mobile ─── */
 
 @media (max-width: 900px) {
-  .login-page {
-    grid-template-columns: 1fr;
-  }
-
-  .login-right {
-    display: none;
-  }
-
-  .login-left {
-    min-height: 100vh;
-    padding: 24px;
-  }
+  .login-page { grid-template-columns: 1fr; }
+  .login-right { display: flex; min-height: auto; padding: 4rem 2rem; }
+  .login-left { min-height: auto; padding: 2rem; }
 }
+
+/* Premium business login treatment. Kept here because this route loads this stylesheet after globals. */
+.login-page { grid-template-columns: minmax(390px, .82fr) minmax(0, 1.18fr); background: #f4f6fb; color: #172a46; }
+.login-left { padding: clamp(2rem, 5vw, 5.5rem); background: radial-gradient(circle at 15% 15%, rgba(211, 224, 250, .7), transparent 24rem), #f7f8fb; }
+.login-right { position: relative; overflow: hidden; justify-content: flex-start; padding: clamp(2.5rem, 6vw, 6rem); background: linear-gradient(135deg, #eef2fa 0%, #f7f4fa 56%, #e6edf9 100%); color: #172a46; }
+.login-right::before { content: ''; position: absolute; width: 32rem; height: 32rem; right: -13rem; top: -15rem; border-radius: 50%; background: rgba(204, 215, 246, .42); }
+.login-right::after { content: ''; position: absolute; width: 18rem; height: 18rem; left: -11rem; bottom: -10rem; border-radius: 50%; background: rgba(222, 213, 240, .38); }
+.login-card { max-width: 430px; padding: clamp(2rem, 4vw, 3.2rem); border: 1px solid rgba(210, 220, 237, .9); border-radius: 28px; background: rgba(255, 255, 255, .88); box-shadow: 0 32px 80px rgba(52, 70, 105, .12), 0 4px 14px rgba(52, 70, 105, .04); backdrop-filter: blur(18px); }
+.login-card-header { text-align: left; margin-bottom: 2.25rem; }
+.login-card-logo { margin-bottom: 3.3rem; }
+.login-card-logo-mark { width: 35px; height: 35px; border-radius: 12px; background: #172a46; color: #d4e9ff; font-size: .95rem; box-shadow: 0 7px 16px rgba(23, 42, 70, .18); }
+.login-card-logo-name { color: #172a46; font-size: 1.12rem; }
+.login-card-title { color: #172a46; font-size: clamp(1.9rem, 3vw, 2.45rem); }
+.login-card-subtitle { margin-top: .6rem; color: #75859c; font-size: .9rem; }
+.login-label { color: #415572; font-size: .76rem; font-weight: 750; }
+.login-input, .login-page .password-input-wrap input { min-height: 52px; height: auto; border: 1px solid #dce4f0; border-radius: 13px; background: #f9fbfe; color: #172a46; }
+.login-input:focus, .login-page .password-input-wrap input:focus { border-color: #7ca5d6; background: #fff; box-shadow: 0 0 0 4px rgba(124, 165, 214, .15); }
+.login-checkbox { color: #718199; font-size: .78rem; }
+.login-forgot, .login-footer-link { color: #477daf; font-size: .78rem; font-weight: 700; }
+.login-submit { height: auto; min-height: 52px; border-radius: 13px; background: #172a46; box-shadow: none; font-size: .84rem; font-weight: 800; }
+.login-submit:hover:not(:disabled) { background: #294c72; box-shadow: 0 12px 24px rgba(23, 42, 70, .19); }
+.login-divider { margin: 2.2rem 0 1.25rem; background: #e6ebf3; }
+.login-footer-links { flex-direction: row; align-items: center; justify-content: space-between; }
+.marketing-panel { position: relative; z-index: 1; width: min(100%, 680px); max-width: none; }
+.marketing-panel-topline { display: flex; align-items: center; justify-content: space-between; margin-bottom: clamp(3rem, 7vw, 6rem); }
+.marketing-panel-logo { margin-bottom: 0; color: #172a46; }
+.marketing-panel-logo-mark { width: 35px; height: 35px; border: 0; border-radius: 12px; background: #fff; color: #477daf; font-size: .95rem; }
+.marketing-panel-logo-name { color: #172a46; font-size: 1.12rem; }
+.marketing-panel-headline { max-width: 570px; margin: 0; color: #172a46; font-size: clamp(2.7rem, 5vw, 5rem); line-height: .98; }
+.marketing-panel-subtitle { max-width: 470px; margin: 1.35rem 0 2.7rem; color: #72839a; font-size: .98rem; line-height: 1.7; }
+.marketing-panel-kicker { margin: 0 0 .9rem; color: #5d86b3; font-size: .72rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.marketing-dashboard { width: min(100%, 590px); overflow: hidden; border: 1px solid rgba(188, 201, 224, .82); border-radius: 18px; background: rgba(255, 255, 255, .82); box-shadow: 0 24px 55px rgba(63, 80, 116, .14); transform: perspective(1200px) rotateY(-3deg) rotateX(1deg); }
+.marketing-dashboard-bar, .marketing-dashboard-body, .marketing-dashboard-heading, .marketing-dashboard-stats, .marketing-dashboard-pipeline, .marketing-pipeline-row, .marketing-pipeline-header { box-sizing: border-box; }
+.marketing-dashboard-bar { display: flex; align-items: center; gap: .85rem; padding: .8rem 1rem; border-bottom: 1px solid #e6ebf3; background: rgba(249, 251, 255, .86); color: #8a9ab0; font-size: .68rem; }
+.marketing-dashboard-dots { display: flex; gap: .25rem; }
+.marketing-dashboard-dots span { width: 6px; height: 6px; border-radius: 50%; background: #c6d1df; }
+.marketing-dashboard-title { flex: 1; color: #75879e; font-weight: 700; }
+.marketing-dashboard-body { padding: 1.25rem; }
+.marketing-dashboard-heading, .marketing-pipeline-header { display: flex; align-items: center; justify-content: space-between; }
+.marketing-dashboard-heading div, .marketing-pipeline-row > div { display: flex; flex-direction: column; gap: .3rem; }
+.marketing-dashboard-eyebrow, .marketing-dashboard-stats span, .marketing-dashboard-stats small, .marketing-pipeline-row small { display: block; color: #8b9aab; font-size: .62rem; }
+.marketing-dashboard-heading strong { color: #253b59; font-size: 1rem; }
+.marketing-dashboard-heading button { display: grid; place-items: center; width: 29px; height: 29px; border: 1px solid #dbe4ef; border-radius: 9px; background: #fff; color: #6389b1; }
+.marketing-dashboard-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; margin-top: 1.1rem; }
+.marketing-dashboard-stats div, .marketing-dashboard-pipeline { padding: .85rem; border: 1px solid #e7edf5; border-radius: 11px; background: #fff; }
+.marketing-dashboard-stats strong { display: block; margin: .3rem 0 .18rem; color: #243b59; font-size: 1.45rem; }
+.marketing-dashboard-stats small { color: #6ca78c; }
+.marketing-dashboard-pipeline { margin-top: .75rem; }
+.marketing-pipeline-header { margin-bottom: .8rem; color: #637892; font-size: .68rem; font-weight: 750; }
+.marketing-pipeline-row { display: flex; align-items: center; gap: .65rem; padding: .65rem 0; border-top: 1px solid #edf1f6; }
+.marketing-pipeline-row > div { flex: 1; gap: .15rem; }
+.marketing-pipeline-row strong { color: #405571; font-size: .68rem; }
+.marketing-avatar { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 9px; font-size: .57rem; font-weight: 800; background: #eee9fa; color: #826da8; }
+.marketing-avatar--blue { background: #e3effb; color: #5d86ad; }
+.marketing-pipeline-badge { display: inline-flex; align-items: center; gap: .25rem; color: #6ca78c; font-size: .6rem; font-weight: 700; }
+.marketing-pipeline-badge--muted { color: #8b9aab; }
+@media (max-width: 1050px) { .login-page { grid-template-columns: minmax(360px, .9fr) minmax(0, 1.1fr); } .login-left { padding: 2rem; } .login-right { padding: 2.5rem; } }
+@media (max-width: 560px) { .login-left { padding: 1.25rem; } .login-card { padding: 1.75rem 1.25rem; border-radius: 20px; } .login-card-logo { margin-bottom: 2rem; } .login-right { padding: 3rem 1.25rem 3.5rem; } .marketing-panel-topline { margin-bottom: 2.5rem; } .marketing-panel-status { display: none; } .marketing-panel-headline { font-size: 3.1rem; } .marketing-dashboard { transform: none; } .marketing-pipeline-badge { display: none; } .login-row, .login-footer-links { align-items: flex-start; flex-direction: column; } }
