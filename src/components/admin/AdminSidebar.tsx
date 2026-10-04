@@ -21,22 +21,40 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getCompanyCareerUrl, type CompanyCareerRef } from '@/lib/company-career';
 
-const navItems = [
+const workspaceNav = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { href: '/admin/applicants', label: 'Applicants', icon: Users },
   { href: '/admin/jobs', label: 'Jobs', icon: Briefcase },
   { href: '/admin/interviews', label: 'Interviews', icon: Calendar },
+];
+
+const manageNav = [
   { href: '/admin/marketing/qr', label: 'QR Code', icon: QrCode },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
+const ROLE_LABELS: Record<string, string> = {
+  OWNER: 'Owner account',
+  MANAGER: 'Manager account',
+  SUPER_ADMIN: 'Super admin',
+};
+
+function initialsOf(value: string) {
+  const parts = value.replace(/@.*/, '').split(/[\s._-]+/).filter(Boolean);
+  return ((parts[0]?.[0] || '') + (parts[1]?.[0] || '')).toUpperCase() || 'H';
+}
+
 export default function AdminSidebar({
   adminEmail,
+  adminName,
+  adminRole,
   storeName,
   companyRef,
   onSearch,
 }: {
   adminEmail?: string;
+  adminName?: string;
+  adminRole?: string;
   storeName?: string;
   companyRef?: CompanyCareerRef | null;
   onSearch?: (q: string) => void;
@@ -86,13 +104,34 @@ export default function AdminSidebar({
   const isActive = (href: string, exact?: boolean) =>
     exact ? pathname === href : pathname.startsWith(href);
 
+  const renderNav = (items: typeof workspaceNav) =>
+    items.map(({ href, label, icon: Icon, exact }) => (
+      <Link
+        key={href}
+        href={href}
+        className={`saas-nav-item ${isActive(href, exact) ? 'active' : ''}`}
+        onClick={() => setMobileOpen(false)}
+      >
+        <Icon size={18} />
+        {label}
+      </Link>
+    ));
+
+  const profileName = adminName || adminEmail || '';
+  const workspaceName = storeName || 'HireHub';
+
   const sidebar = (
     <aside className="saas-sidebar">
       <div className="saas-sidebar-brand">
         <div className="saas-logo-badge">H</div>
-        <div>
-          <div className="saas-brand-name">{storeName || 'HireHub'}</div>
-          <div className="saas-brand-sub">Hiring Management</div>
+        <div className="hh-wordmark">hire<span>hub</span></div>
+      </div>
+
+      <div className="hh-workspace">
+        <div className="hh-workspace-logo">{workspaceName.charAt(0).toUpperCase()}</div>
+        <div className="hh-workspace-text">
+          <strong className="saas-brand-name">{workspaceName}</strong>
+          <small className="saas-brand-sub">Business workspace</small>
         </div>
       </div>
 
@@ -107,17 +146,10 @@ export default function AdminSidebar({
       </form>
 
       <nav className="saas-nav">
-        {navItems.map(({ href, label, icon: Icon, exact }) => (
-          <Link
-            key={href}
-            href={href}
-            className={`saas-nav-item ${isActive(href, exact) ? 'active' : ''}`}
-            onClick={() => setMobileOpen(false)}
-          >
-            <Icon size={18} />
-            {label}
-          </Link>
-        ))}
+        <p className="hh-nav-label">Workspace</p>
+        {renderNav(workspaceNav)}
+        <p className="hh-nav-label hh-nav-label-spaced">Manage</p>
+        {renderNav(manageNav)}
       </nav>
 
       <div className="saas-sidebar-footer">
@@ -136,7 +168,17 @@ export default function AdminSidebar({
           {dark ? <Sun size={18} /> : <Moon size={18} />}
           {dark ? 'Light Mode' : 'Dark Mode'}
         </button>
-        {adminEmail && <div className="saas-admin-email">{adminEmail}</div>}
+        {profileName && (
+          <div className="hh-profile">
+            <div className="hh-avatar">{initialsOf(profileName)}</div>
+            <div className="hh-profile-text">
+              <strong>{profileName}</strong>
+              <small className="saas-admin-email">
+                {adminName && adminEmail ? adminEmail : ROLE_LABELS[adminRole || ''] || 'Business account'}
+              </small>
+            </div>
+          </div>
+        )}
         <button type="button" className="saas-nav-item saas-logout" onClick={handleLogout}>
           <LogOut size={18} />
           Log Out

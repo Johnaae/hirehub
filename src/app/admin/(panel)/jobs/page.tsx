@@ -109,6 +109,13 @@ export default function JobsPage() {
     setShowForm(true);
   };
 
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('new') === '1') {
+      openCreate();
+      window.history.replaceState(null, '', '/admin/jobs');
+    }
+  }, []);
+
   const openEdit = async (job: JobCardData) => {
     setEditingId(job.id);
     const res = await fetch(`/api/admin/jobs/${job.id}`);

@@ -9,6 +9,8 @@ export const COMPANY_UPDATED_EVENT = 'hirehub:company-updated';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [adminEmail, setAdminEmail] = useState('');
+  const [adminName, setAdminName] = useState('');
+  const [adminRole, setAdminRole] = useState('');
   const [storeName, setStoreName] = useState('');
   const [companyRef, setCompanyRef] = useState<CompanyCareerRef>({ id: 0, slug: '' });
   const [impersonating, setImpersonating] = useState<{ name: string; slug: string } | null>(null);
@@ -23,7 +25,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     fetch('/api/admin/me')
       .then((r) => r.json())
       .then((d) => {
-        if (d.admin) setAdminEmail(d.admin.email || d.admin.name || '');
+        if (d.admin) {
+          setAdminEmail(d.admin.email || d.admin.name || '');
+          setAdminName(d.admin.name || '');
+        }
+        if (d.role) setAdminRole(d.role);
         if (d.company) {
           applyCompany(d.company);
           if (d.impersonateCompanyId) {
@@ -59,7 +65,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </button>
         </div>
       )}
-      <AdminSidebar adminEmail={adminEmail} storeName={storeName} companyRef={companyRef.id ? companyRef : null} />
+      <AdminSidebar adminEmail={adminEmail} adminName={adminName} adminRole={adminRole} storeName={storeName} companyRef={companyRef.id ? companyRef : null} />
       <main className="saas-main">{children}</main>
       <Toaster position="top-right" richColors closeButton />
     </div>
