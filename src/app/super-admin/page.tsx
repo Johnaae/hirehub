@@ -42,6 +42,7 @@ export default function SuperAdminPage() {
     fetch('/api/super-admin/companies')
       .then((r) => r.json())
       .then((d) => setCompanies(d.companies || []))
+      .catch(() => {})
       .finally(() => setLoading(false));
 
   useEffect(() => {
@@ -51,7 +52,8 @@ export default function SuperAdminPage() {
       .then((d) => {
         setEmailConfigured(!!d.emailConfigured);
         setPlatformFromEmail(d.fromEmail || null);
-      });
+      })
+      .catch(() => {});
   }, []);
 
   const handleCreate = async (e: React.FormEvent) => {

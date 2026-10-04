@@ -75,7 +75,7 @@ export default function ApplicantDetailPage() {
         setNotes(appData.applicant.notes || '');
       }
       if (notesData.notes?.[0]) setNoteRecord(notesData.notes[0]);
-    }).finally(() => setLoading(false));
+    }).catch(() => {}).finally(() => setLoading(false));
   }, [id]);
 
   const saveNotes = useCallback(async (content: string) => {

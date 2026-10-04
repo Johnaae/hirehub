@@ -52,7 +52,8 @@ export default function JobsPage() {
       .then((d) => {
         setJobs(d.jobs || []);
         if (d.stats) setStats(d.stats);
-      });
+      })
+      .catch(() => {});
   }, [search, statusFilter, deptFilter]);
 
   const loadLookups = () =>
@@ -60,14 +61,16 @@ export default function JobsPage() {
       .then((r) => r.json())
       .then((d) => {
         if (d.lookups) setLookups(d.lookups);
-      });
+      })
+      .catch(() => {});
 
   const loadTemplates = () =>
     fetch('/api/admin/jobs/templates')
       .then((r) => r.json())
       .then((d) => {
         if (d.templates) setTemplates(d.templates);
-      });
+      })
+      .catch(() => {});
 
   const loadMeta = () =>
     Promise.all([
@@ -76,7 +79,7 @@ export default function JobsPage() {
     ]).then(([lookupData, templateData]) => {
       if (lookupData.lookups) setLookups(lookupData.lookups);
       if (templateData.templates) setTemplates(templateData.templates);
-    });
+    }).catch(() => {});
 
   useEffect(() => {
     setLoading(true);
@@ -85,7 +88,7 @@ export default function JobsPage() {
       loadMeta(),
       fetch('/api/admin/me').then((r) => r.json()).then((d) => {
         if (d.company) setCompanyRef({ id: d.company.id, slug: d.company.slug });
-      }),
+      }).catch(() => {}),
     ]).finally(() => setLoading(false));
   }, [loadJobs]);
 
@@ -105,6 +108,13 @@ export default function JobsPage() {
     loadTemplates();
     setShowForm(true);
   };
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('new') === '1') {
+      openCreate();
+      window.history.replaceState(null, '', '/admin/jobs');
+    }
+  }, []);
 
   const openEdit = async (job: JobCardData) => {
     setEditingId(job.id);

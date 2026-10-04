@@ -70,6 +70,7 @@ function CareersPageContent() {
           setNotFoundState(true);
         }
       })
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, [slug]);
 

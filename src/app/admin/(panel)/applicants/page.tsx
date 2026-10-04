@@ -47,14 +47,19 @@ function ApplicantsContent() {
     params.set('sort', sort);
     params.set('page', String(page));
 
-    const res = await fetch(`/api/admin/applicants?${params}`);
-    const data = await res.json();
-    if (res.ok) {
-      setApplicants(data.applicants);
-      setPagination(data.pagination);
-      setPositions(data.positions || []);
+    try {
+      const res = await fetch(`/api/admin/applicants?${params}`);
+      const data = await res.json();
+      if (res.ok) {
+        setApplicants(data.applicants);
+        setPagination(data.pagination);
+        setPositions(data.positions || []);
+      }
+    } catch {
+      // keep previous results
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [search, statusFilter, positionFilter, sort, page]);
 
   useEffect(() => {

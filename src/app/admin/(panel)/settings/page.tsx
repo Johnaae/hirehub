@@ -69,6 +69,7 @@ export default function SettingsPage() {
           setSharedEmailConfigured(!!d.company.settings?.sharedSmtpConfigured);
         }
       })
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 

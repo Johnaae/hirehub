@@ -45,6 +45,7 @@ export default function LoginPageClient() {
     fetch('/api/admin/session')
       .then((r) => r.json())
       .then((d) => setSession(d))
+      .catch(() => setSession(null))
       .finally(() => setCheckingSession(false));
   }, []);
 

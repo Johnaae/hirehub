@@ -63,7 +63,8 @@ export default function AccountSecuritySection() {
           });
           setNewEmail(d.admin.email);
         }
-      });
+      })
+      .catch(() => {});
 
   useEffect(() => {
     loadAccount().finally(() => setLoading(false));
